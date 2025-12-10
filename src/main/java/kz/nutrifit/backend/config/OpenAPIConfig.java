@@ -31,7 +31,8 @@ public class OpenAPIConfig {
     public GroupedOpenApi nutrifitApi() {
         return GroupedOpenApi.builder()
                 .group("nutrifit")
-                .pathsToMatch("/**")
+                .packagesToScan("kz.nutrifit.backend")
+                .pathsToMatch("/api/**")
                 .build();
     }
 }
