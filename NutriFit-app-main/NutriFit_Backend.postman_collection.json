@@ -1,0 +1,480 @@
+{
+	"info": {
+		"_postman_id": "nutrifit-backend-collection",
+		"name": "NutriFit Backend API",
+		"description": "Коллекция API запросов для NutriFit Backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"token\", jsonData.token);",
+									"    pm.environment.set(\"userId\", jsonData.userId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Иван Иванов\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"token\", jsonData.token);",
+									"    pm.environment.set(\"userId\", jsonData.userId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Иван Иванов\",\n  \"age\": 30,\n  \"gender\": \"MALE\",\n  \"heightCm\": 180.0,\n  \"weightKg\": 75.0,\n  \"goal\": \"LOSE_WEIGHT\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "profile"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Nutrition",
+			"item": [
+				{
+					"name": "Create Meal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Завтрак\",\n  \"mealDate\": \"2024-01-15T08:00:00\",\n  \"items\": [\n    {\n      \"name\": \"Овсянка\",\n      \"calories\": 300.0,\n      \"protein\": 10.0,\n      \"carbs\": 50.0,\n      \"fat\": 5.0,\n      \"quantity\": 100.0\n    },\n    {\n      \"name\": \"Бананы\",\n      \"calories\": 100.0,\n      \"protein\": 1.0,\n      \"carbs\": 25.0,\n      \"fat\": 0.0,\n      \"quantity\": 1.0\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/nutrition/meals",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "nutrition", "meals"]
+						}
+					}
+				},
+				{
+					"name": "Get All Meals",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nutrition/meals",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "nutrition", "meals"]
+						}
+					}
+				},
+				{
+					"name": "Get Meal by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nutrition/meals/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "nutrition", "meals", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Meal",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Завтрак обновленный\",\n  \"mealDate\": \"2024-01-15T08:00:00\",\n  \"items\": [\n    {\n      \"name\": \"Овсянка\",\n      \"calories\": 350.0,\n      \"protein\": 12.0,\n      \"carbs\": 55.0,\n      \"fat\": 6.0,\n      \"quantity\": 120.0\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/nutrition/meals/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "nutrition", "meals", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Meal",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nutrition/meals/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "nutrition", "meals", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Workouts",
+			"item": [
+				{
+					"name": "Create Workout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"Бег\",\n  \"durationMinutes\": 30,\n  \"caloriesBurned\": 300.0,\n  \"workoutDate\": \"2024-01-15T18:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/workouts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "workouts"]
+						}
+					}
+				},
+				{
+					"name": "Get All Workouts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/workouts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "workouts"]
+						}
+					}
+				},
+				{
+					"name": "Update Workout",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"Бег\",\n  \"durationMinutes\": 45,\n  \"caloriesBurned\": 450.0,\n  \"workoutDate\": \"2024-01-15T18:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/workouts/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "workouts", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Workout",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/workouts/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "workouts", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Metrics",
+			"item": [
+				{
+					"name": "Create Metric",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"steps\": 10000,\n  \"heartRate\": 72,\n  \"caloriesBurned\": 250.0,\n  \"sleepHours\": 7.5,\n  \"recordedAt\": \"2024-01-15T22:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/metrics",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "metrics"]
+						}
+					}
+				},
+				{
+					"name": "Get All Metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/metrics",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "metrics"]
+						}
+					}
+				},
+				{
+					"name": "Update Metric",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"steps\": 12000,\n  \"heartRate\": 75,\n  \"caloriesBurned\": 300.0,\n  \"sleepHours\": 8.0,\n  \"recordedAt\": \"2024-01-15T22:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/metrics/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "metrics", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Metric",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/metrics/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "metrics", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "AI",
+			"item": [
+				{
+					"name": "Get AI Recommendation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"prompt\": \"Дай мне рекомендации по питанию на сегодня\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/ai/recommend",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "ai", "recommend"]
+						}
+					}
+				},
+				{
+					"name": "Get AI Recommendation (Auto)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ai/recommend",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "ai", "recommend"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		}
+	]
+}
+
