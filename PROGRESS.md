@@ -8,7 +8,7 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 0 — Стабилизация монолита  
-**Активная задача:** 0.3 — Добавить Flyway  
+**Активная задача:** 0.4 — Переключить `ddl-auto=validate`  
 **Последнее обновление:** 2026-04-17  
 **Сессия:** #1 (создание ARCHITECTURE.md и PROGRESS.md)
 
@@ -22,7 +22,7 @@
 |---|---|---|---|
 | 0.1 | Вынести секреты: `JWT_SECRET`, `DB_PASSWORD`, `OPENAI_API_KEY`, `ALLOWED_ORIGINS` в `.env` | ✅ | `.env`, `.env.example`, `application.properties`, `docker-compose.yml`, `.gitignore`. Решение задокументировано в [DECISIONS.md](DECISIONS.md) (ADR-001) |
 | 0.2 | Исправить CORS: `"*"` → `${ALLOWED_ORIGINS}` | ✅ | `CorsConfig.java`. ADR-002 в DECISIONS.md |
-| 0.3 | Добавить Flyway: зависимость + `V1__init_schema.sql` | ⬜ | |
+| 0.3 | Добавить Flyway: зависимость + `V1__init_schema.sql` | ✅ | `flyway-core` + `flyway-database-postgresql` в pom.xml, `V1__init_schema.sql`, `baseline-on-migrate=true`. ADR-003 в DECISIONS.md |
 | 0.4 | Переключить `ddl-auto=validate` | ⬜ | Делать после 0.3 |
 | 0.5 | Создать `WorkoutRequest.java` DTO | ⬜ | |
 | 0.6 | Создать `HealthMetricRequest.java` DTO | ⬜ | |
@@ -192,6 +192,7 @@
 | Дата | Сессия | Выполнено | Следующий шаг |
 |---|---|---|---|
 | 2026-04-17 | #1 | Создание ARCHITECTURE.md, PROGRESS.md, задачи 0.1 и 0.2 выполнены | Задача 0.3 — добавить Flyway |
+| 2026-04-17 | #2 | Задача 0.3 выполнена: Flyway добавлен, V1__init_schema.sql создан | Задача 0.4 — переключить ddl-auto=validate |
 
 ---
 
