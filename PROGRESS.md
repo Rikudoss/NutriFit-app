@@ -8,7 +8,7 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 0 — Стабилизация монолита  
-**Активная задача:** 0.7 — Убрать JPA entity из `@RequestBody` в WorkoutController  
+**Активная задача:** 0.12 — Исправить расчёт калорий  
 **Последнее обновление:** 2026-04-17  
 **Сессия:** #1 (создание ARCHITECTURE.md и PROGRESS.md)
 
@@ -28,11 +28,11 @@
 | 0.6 | Создать `HealthMetricRequest.java` DTO | ✅ | `metrics/HealthMetricRequest.java` + MetricsController + MetricsService |
 | 0.7 | Убрать JPA entity из `@RequestBody` в WorkoutController | ✅ | Выполнено в составе 0.5 (DTO заменил entity в @RequestBody) |
 | 0.8 | Убрать JPA entity из `@RequestBody` в MetricsController | ✅ | Выполнено в составе 0.6 (DTO заменил entity в @RequestBody) |
-| 0.9 | Починить `ProfileController`: убрать прямой `ProfileRepository`, использовать `ProfileService` | ⬜ | ProfileService.patch() уже есть, но не используется |
-| 0.10 | Починить `OnboardingController`: убрать дублирование, вызывать `ProfileService.completeOnboarding()` | ⬜ | |
-| 0.11 | Убрать `ProfileRepository`, `MealRepository`, `WorkoutRepository`, `MetricsRepository` из `AIController` | ⬜ | Создать AIService.buildContext() |
+| 0.9 | Починить `ProfileController`: убрать прямой `ProfileRepository`, использовать `ProfileService` | ✅ | Убраны `profileRepository` + `userService`; добавлены `ProfileService.update()` и `.getOnboardingStatus()` |
+| 0.10 | Починить `OnboardingController`: убрать дублирование, вызывать `ProfileService.completeOnboarding()` | ✅ | Убраны `profileRepository` + `userService`; логика status() перенесена в `ProfileService.getOnboardingStatus()` |
+| 0.11 | Убрать `ProfileRepository`, `MealRepository`, `WorkoutRepository`, `MetricsRepository` из `AIController` | ✅ | 4 репозитория перенесены в `AIService.buildContext()`; контроллер инжектит только AIService + UserService |
 | 0.12 | Исправить расчёт калорий: `calories = calories_per_100g * quantity / 100` | ⬜ | Баг: quantity сейчас игнорируется |
-| 0.13 | Добавить handler `IllegalStateException` → 400 в `GlobalExceptionHandler` | ⬜ | |
+| 0.13 | Добавить handler `IllegalStateException` → 400 в `GlobalExceptionHandler` | ✅ | `GlobalExceptionHandler`: новый `@ExceptionHandler(IllegalStateException.class)` → 400 |
 | 0.14 | Добавить `@Transactional` на `updateWorkout`, `deleteWorkout` в `WorkoutService` | ⬜ | |
 | 0.15 | Добавить `@Transactional` на `updateMetric`, `deleteMetric` в `MetricsService` | ⬜ | |
 | 0.16 | Исправить N+1 в `NutritionService.addItemsToMeal()`: `saveAll()` вместо цикла | ⬜ | |

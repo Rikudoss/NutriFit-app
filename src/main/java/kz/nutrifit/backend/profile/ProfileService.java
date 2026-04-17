@@ -1,4 +1,6 @@
-package kz.nutrifit.backend.profile;// kz.nutrifit.backend.profile.ProfileService
+package kz.nutrifit.backend.profile;
+
+import kz.nutrifit.backend.onboarding.dto.OnboardingStatusResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +42,36 @@ public class ProfileService {
 
         // JPA сохранит сам в конце транзакции
         return toResponse(p);
+    }
+
+    @Transactional
+    public ProfileResponse update(String email, ProfilePatchRequest req) {
+        Profile p = getByEmail(email);
+        p.setFullName(req.getFullName());
+        p.setAge(req.getAge());
+        p.setGender(req.getGender());
+        p.setHeightCm(req.getHeightCm());
+        p.setWeightKg(req.getWeightKg());
+        p.setGoal(req.getGoal());
+        return toResponse(p);
+    }
+
+    public OnboardingStatusResponse getOnboardingStatus(String email) {
+        Profile p = getByEmail(email);
+
+        int filled = 0;
+        if (p.getGender() != null) filled++;
+        if (p.getWeightKg() != null) filled++;
+        if (p.getAge() != null) filled++;
+        if (p.getGoal() != null) filled++;
+
+        String next =
+                p.getGender() == null ? "GENDER" :
+                p.getWeightKg() == null ? "WEIGHT" :
+                p.getAge() == null ? "AGE" :
+                p.getGoal() == null ? "GOAL" : "COMPLETE";
+
+        return new OnboardingStatusResponse("COMPLETE".equals(next), next, filled / 4.0);
     }
 
     @Transactional
