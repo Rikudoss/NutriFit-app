@@ -8,7 +8,7 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 0 — Стабилизация монолита  
-**Активная задача:** 0.6 — Создать `HealthMetricRequest.java` DTO  
+**Активная задача:** 0.7 — Убрать JPA entity из `@RequestBody` в WorkoutController  
 **Последнее обновление:** 2026-04-17  
 **Сессия:** #1 (создание ARCHITECTURE.md и PROGRESS.md)
 
@@ -25,9 +25,9 @@
 | 0.3 | Добавить Flyway: зависимость + `V1__init_schema.sql` | ✅ | `flyway-core` + `flyway-database-postgresql` в pom.xml, `V1__init_schema.sql`, `baseline-on-migrate=true`. ADR-003 в DECISIONS.md |
 | 0.4 | Переключить `ddl-auto=validate` | ✅ | `application.properties`: `update` → `validate` |
 | 0.5 | Создать `WorkoutRequest.java` DTO | ✅ | `workout/WorkoutRequest.java` с `@NotBlank`, `@Positive`, `@PositiveOrZero`, `@NotNull` |
-| 0.6 | Создать `HealthMetricRequest.java` DTO | ⬜ | |
-| 0.7 | Убрать JPA entity из `@RequestBody` в WorkoutController | ⬜ | |
-| 0.8 | Убрать JPA entity из `@RequestBody` в MetricsController | ⬜ | |
+| 0.6 | Создать `HealthMetricRequest.java` DTO | ✅ | `metrics/HealthMetricRequest.java` + MetricsController + MetricsService |
+| 0.7 | Убрать JPA entity из `@RequestBody` в WorkoutController | ✅ | Выполнено в составе 0.5 (DTO заменил entity в @RequestBody) |
+| 0.8 | Убрать JPA entity из `@RequestBody` в MetricsController | ✅ | Выполнено в составе 0.6 (DTO заменил entity в @RequestBody) |
 | 0.9 | Починить `ProfileController`: убрать прямой `ProfileRepository`, использовать `ProfileService` | ⬜ | ProfileService.patch() уже есть, но не используется |
 | 0.10 | Починить `OnboardingController`: убрать дублирование, вызывать `ProfileService.completeOnboarding()` | ⬜ | |
 | 0.11 | Убрать `ProfileRepository`, `MealRepository`, `WorkoutRepository`, `MetricsRepository` из `AIController` | ⬜ | Создать AIService.buildContext() |

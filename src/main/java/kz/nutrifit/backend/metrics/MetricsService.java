@@ -15,7 +15,13 @@ public class MetricsService {
         this.metricsRepository = metricsRepository;
     }
 
-    public HealthMetric createMetric(HealthMetric metric, User user) {
+    public HealthMetric createMetric(HealthMetricRequest request, User user) {
+        HealthMetric metric = new HealthMetric();
+        metric.setSteps(request.getSteps());
+        metric.setHeartRate(request.getHeartRate());
+        metric.setCaloriesBurned(request.getCaloriesBurned());
+        metric.setSleepHours(request.getSleepHours());
+        metric.setRecordedAt(request.getRecordedAt());
         metric.setUser(user);
         return metricsRepository.save(metric);
     }
@@ -24,17 +30,17 @@ public class MetricsService {
         return metricsRepository.findAllByUser(user);
     }
 
-    public HealthMetric updateMetric(Long id, HealthMetric metricUpdate, User user) {
+    public HealthMetric updateMetric(Long id, HealthMetricRequest request, User user) {
         HealthMetric existing = metricsRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Metric not found"));
         if (!existing.getUser().getId().equals(user.getId())) {
             throw new NotFoundException("Metric not found");
         }
-        existing.setSteps(metricUpdate.getSteps());
-        existing.setHeartRate(metricUpdate.getHeartRate());
-        existing.setCaloriesBurned(metricUpdate.getCaloriesBurned());
-        existing.setSleepHours(metricUpdate.getSleepHours());
-        existing.setRecordedAt(metricUpdate.getRecordedAt());
+        existing.setSteps(request.getSteps());
+        existing.setHeartRate(request.getHeartRate());
+        existing.setCaloriesBurned(request.getCaloriesBurned());
+        existing.setSleepHours(request.getSleepHours());
+        existing.setRecordedAt(request.getRecordedAt());
         return metricsRepository.save(existing);
     }
 

@@ -24,9 +24,9 @@ public class MetricsController {
 
     @PostMapping
     public ResponseEntity<HealthMetric> createMetric(@AuthenticationPrincipal UserDetails principal,
-                                                     @RequestBody @Valid HealthMetric metric) {
+                                                     @RequestBody @Valid HealthMetricRequest request) {
         User user = userService.getByEmail(principal.getUsername());
-        return ResponseEntity.ok(metricsService.createMetric(metric, user));
+        return ResponseEntity.ok(metricsService.createMetric(request, user));
     }
 
     @GetMapping
@@ -38,9 +38,9 @@ public class MetricsController {
     @PutMapping("/{id}")
     public ResponseEntity<HealthMetric> updateMetric(@AuthenticationPrincipal UserDetails principal,
                                                      @PathVariable Long id,
-                                                     @RequestBody @Valid HealthMetric metric) {
+                                                     @RequestBody @Valid HealthMetricRequest request) {
         User user = userService.getByEmail(principal.getUsername());
-        return ResponseEntity.ok(metricsService.updateMetric(id, metric, user));
+        return ResponseEntity.ok(metricsService.updateMetric(id, request, user));
     }
 
     @DeleteMapping("/{id}")
