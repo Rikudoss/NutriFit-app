@@ -15,7 +15,12 @@ public class WorkoutService {
         this.workoutRepository = workoutRepository;
     }
 
-    public Workout createWorkout(Workout workout, User user) {
+    public Workout createWorkout(WorkoutRequest request, User user) {
+        Workout workout = new Workout();
+        workout.setType(request.getType());
+        workout.setDurationMinutes(request.getDurationMinutes());
+        workout.setCaloriesBurned(request.getCaloriesBurned());
+        workout.setWorkoutDate(request.getWorkoutDate());
         workout.setUser(user);
         return workoutRepository.save(workout);
     }
@@ -24,16 +29,16 @@ public class WorkoutService {
         return workoutRepository.findAllByUser(user);
     }
 
-    public Workout updateWorkout(Long id, Workout update, User user) {
+    public Workout updateWorkout(Long id, WorkoutRequest request, User user) {
         Workout existing = workoutRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));
         if (!existing.getUser().getId().equals(user.getId())) {
             throw new NotFoundException("Workout not found");
         }
-        existing.setType(update.getType());
-        existing.setDurationMinutes(update.getDurationMinutes());
-        existing.setCaloriesBurned(update.getCaloriesBurned());
-        existing.setWorkoutDate(update.getWorkoutDate());
+        existing.setType(request.getType());
+        existing.setDurationMinutes(request.getDurationMinutes());
+        existing.setCaloriesBurned(request.getCaloriesBurned());
+        existing.setWorkoutDate(request.getWorkoutDate());
         return workoutRepository.save(existing);
     }
 

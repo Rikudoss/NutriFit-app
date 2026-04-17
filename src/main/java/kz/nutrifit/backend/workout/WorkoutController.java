@@ -24,9 +24,9 @@ public class WorkoutController {
 
     @PostMapping
     public ResponseEntity<Workout> createWorkout(@AuthenticationPrincipal UserDetails principal,
-                                                 @RequestBody @Valid Workout workout) {
+                                                 @RequestBody @Valid WorkoutRequest request) {
         User user = userService.getByEmail(principal.getUsername());
-        return ResponseEntity.ok(workoutService.createWorkout(workout, user));
+        return ResponseEntity.ok(workoutService.createWorkout(request, user));
     }
 
     @GetMapping
@@ -38,9 +38,9 @@ public class WorkoutController {
     @PutMapping("/{id}")
     public ResponseEntity<Workout> updateWorkout(@AuthenticationPrincipal UserDetails principal,
                                                  @PathVariable Long id,
-                                                 @RequestBody @Valid Workout workout) {
+                                                 @RequestBody @Valid WorkoutRequest request) {
         User user = userService.getByEmail(principal.getUsername());
-        return ResponseEntity.ok(workoutService.updateWorkout(id, workout, user));
+        return ResponseEntity.ok(workoutService.updateWorkout(id, request, user));
     }
 
     @DeleteMapping("/{id}")

@@ -8,7 +8,7 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 0 — Стабилизация монолита  
-**Активная задача:** 0.5 — Создать `WorkoutRequest.java` DTO  
+**Активная задача:** 0.6 — Создать `HealthMetricRequest.java` DTO  
 **Последнее обновление:** 2026-04-17  
 **Сессия:** #1 (создание ARCHITECTURE.md и PROGRESS.md)
 
@@ -24,7 +24,7 @@
 | 0.2 | Исправить CORS: `"*"` → `${ALLOWED_ORIGINS}` | ✅ | `CorsConfig.java`. ADR-002 в DECISIONS.md |
 | 0.3 | Добавить Flyway: зависимость + `V1__init_schema.sql` | ✅ | `flyway-core` + `flyway-database-postgresql` в pom.xml, `V1__init_schema.sql`, `baseline-on-migrate=true`. ADR-003 в DECISIONS.md |
 | 0.4 | Переключить `ddl-auto=validate` | ✅ | `application.properties`: `update` → `validate` |
-| 0.5 | Создать `WorkoutRequest.java` DTO | ⬜ | |
+| 0.5 | Создать `WorkoutRequest.java` DTO | ✅ | `workout/WorkoutRequest.java` с `@NotBlank`, `@Positive`, `@PositiveOrZero`, `@NotNull` |
 | 0.6 | Создать `HealthMetricRequest.java` DTO | ⬜ | |
 | 0.7 | Убрать JPA entity из `@RequestBody` в WorkoutController | ⬜ | |
 | 0.8 | Убрать JPA entity из `@RequestBody` в MetricsController | ⬜ | |
@@ -203,3 +203,11 @@
 | # | Описание | Решение |
 |---|---|---|
 | — | — | — |
+
+---
+
+## Технический долг (после Фазы 0)
+
+| # | Описание | Где |
+|---|---|---|
+| TD-1 | Добавить `spring.jpa.open-in-view=false` в `application.properties` | Hibernate предупреждает при старте: Open Session In View держит транзакцию открытой на время HTTP-запроса, что провоцирует lazy-loading в контроллерах и скрывает N+1 проблемы |
