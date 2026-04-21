@@ -8,7 +8,7 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 1 — Инфраструктура  
-**Активная задача:** 1.5 — Docker Compose  
+**Активная задача:** 1.6 — Dockerfile монолита  
 **Последнее обновление:** 2026-04-21  
 **Сессия:** #3 (монорепо, multi-module Maven, переезд монолита в services/monolith)
 
@@ -50,7 +50,7 @@
 | 1.2 | Создать `infrastructure/config-server` | ✅ | Spring Cloud Config, native backend, classpath:/configs/; конфиги: application.yml (shared) + monolith.yml |
 | 1.3 | Создать `infrastructure/discovery-server` (Eureka) | ✅ | @EnableEurekaServer, порт 8761, self-preservation отключён для локальной разработки |
 | 1.4 | Создать `services/api-gateway` (Spring Cloud Gateway) | ✅ | Reactive/Netty, порт 8080, статический роут /api/** → localhost:8081, CORS через globalcors; монолит переехал на 8081 |
-| 1.5 | Docker Compose: PostgreSQL, Redis, Kafka+ZK, Zipkin, Prometheus, Grafana | ⬜ | |
+| 1.5 | Docker Compose: PostgreSQL 16, Redis 7, Kafka+ZK, Zipkin | ✅ | nutrifit-network, named volumes, healthchecks, restart: unless-stopped; Spring-сервисы добавим в 1.6 |
 | 1.6 | Dockerfile для монолита (multi-stage build) | ⬜ | |
 | 1.7 | Подключить монолит к Eureka + Config Server | ⬜ | |
 | 1.8 | Настроить роутинг Gateway → монолит | ⬜ | |
