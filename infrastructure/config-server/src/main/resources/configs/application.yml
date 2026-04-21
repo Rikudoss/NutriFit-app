@@ -1,0 +1,12 @@
+# Общие дефолты для ВСЕХ сервисов (перекрываются {service-name}.yml)
+spring:
+  jpa:
+    open-in-view: false
+  main:
+    banner-mode: off
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
