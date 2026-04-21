@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # CORS — настроен здесь, монолит свой CorsConfig может отключить после 1.7
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns:
+                  - "${ALLOWED_ORIGINS:http://localhost:3000}"
+                allowedMethods: "*"
+                allowedHeaders: "*"
+                allowCredentials: true
+
+          routes:
+            # Весь /api/** → монолит на 8081
+            # TODO: после 1.7 заменить статический URL на lb://monolith (Eureka)
+            - id: monolith
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always

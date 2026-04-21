@@ -1,7 +1,7 @@
 # Конфиг монолита — подгружается когда spring.application.name=monolith
 # Чувствительные данные (пароли, ключи) НЕ хранятся здесь — только в .env
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
