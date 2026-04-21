@@ -7,10 +7,10 @@
 
 ## Текущий статус
 
-**Активная фаза:** Фаза 0 — Стабилизация монолита  
-**Активная задача:** 0.12 — Исправить расчёт калорий  
-**Последнее обновление:** 2026-04-17  
-**Сессия:** #1 (создание ARCHITECTURE.md и PROGRESS.md)
+**Активная фаза:** Фаза 1 — Инфраструктура  
+**Активная задача:** 1.2 — Config Server  
+**Последнее обновление:** 2026-04-21  
+**Сессия:** #3 (монорепо, multi-module Maven, переезд монолита в services/monolith)
 
 ---
 
@@ -46,13 +46,14 @@
 
 | # | Задача | Статус | Заметки |
 |---|---|---|---|
-| 1.1 | Создать `infrastructure/config-server` | ⬜ | |
-| 1.2 | Создать `infrastructure/discovery-server` (Eureka) | ⬜ | |
-| 1.3 | Создать `services/api-gateway` (Spring Cloud Gateway) | ⬜ | |
-| 1.4 | Docker Compose: PostgreSQL, Redis, Kafka+ZK, Zipkin, Prometheus, Grafana | ⬜ | |
-| 1.5 | Dockerfile для монолита (multi-stage build) | ⬜ | |
-| 1.6 | Подключить монолит к Eureka + Config Server | ⬜ | |
-| 1.7 | Настроить роутинг Gateway → монолит | ⬜ | |
+| 1.1 | Multi-module Maven: parent pom.xml + services/monolith/, docker/, infrastructure/ | ✅ | `src/` → `services/monolith/src/`; `docker-compose.yml` → `docker/`; `infrastructure/config-server/` и `infrastructure/discovery-server/` заготовлены |
+| 1.2 | Создать `infrastructure/config-server` | ⬜ | |
+| 1.3 | Создать `infrastructure/discovery-server` (Eureka) | ⬜ | |
+| 1.4 | Создать `services/api-gateway` (Spring Cloud Gateway) | ⬜ | |
+| 1.5 | Docker Compose: PostgreSQL, Redis, Kafka+ZK, Zipkin, Prometheus, Grafana | ⬜ | |
+| 1.6 | Dockerfile для монолита (multi-stage build) | ⬜ | |
+| 1.7 | Подключить монолит к Eureka + Config Server | ⬜ | |
+| 1.8 | Настроить роутинг Gateway → монолит | ⬜ | |
 
 ---
 
@@ -193,6 +194,7 @@
 |---|---|---|---|
 | 2026-04-17 | #1 | Создание ARCHITECTURE.md, PROGRESS.md, задачи 0.1 и 0.2 выполнены | Задача 0.3 — добавить Flyway |
 | 2026-04-17 | #2 | Задача 0.3 выполнена: Flyway добавлен, V1__init_schema.sql создан | Задача 0.4 — переключить ddl-auto=validate |
+| 2026-04-21 | #3 | Фаза 0 закрыта (0.1–0.17 ✅). Задача 1.1: монорепо — parent pom.xml, services/monolith/, docker/, infrastructure/ | Задача 1.2 — config-server |
 
 ---
 
