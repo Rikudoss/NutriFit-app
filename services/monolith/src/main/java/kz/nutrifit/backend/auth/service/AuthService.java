@@ -48,7 +48,6 @@ public class AuthService {
                 .build();
         user = userRepository.save(user);
         Profile profile = Profile.builder()
-                .fullName(request.getFullName())
                 .user(user)
                 .build();
         profileRepository.save(profile);
