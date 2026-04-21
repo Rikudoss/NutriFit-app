@@ -3,6 +3,7 @@ package kz.nutrifit.backend.workout;
 import kz.nutrifit.backend.exception.NotFoundException;
 import kz.nutrifit.backend.user.User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class WorkoutService {
         this.workoutRepository = workoutRepository;
     }
 
+    @Transactional
     public Workout createWorkout(WorkoutRequest request, User user) {
         Workout workout = new Workout();
         workout.setType(request.getType());
@@ -29,6 +31,7 @@ public class WorkoutService {
         return workoutRepository.findAllByUser(user);
     }
 
+    @Transactional
     public Workout updateWorkout(Long id, WorkoutRequest request, User user) {
         Workout existing = workoutRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));
@@ -42,6 +45,7 @@ public class WorkoutService {
         return workoutRepository.save(existing);
     }
 
+    @Transactional
     public void deleteWorkout(Long id, User user) {
         Workout existing = workoutRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Workout not found"));

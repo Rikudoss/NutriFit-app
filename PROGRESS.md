@@ -20,9 +20,9 @@
 
 | # | Задача | Статус | Заметки |
 |---|---|---|---|
-| 0.1 | Вынести секреты: `JWT_SECRET`, `DB_PASSWORD`, `OPENAI_API_KEY`, `ALLOWED_ORIGINS` в `.env` | ✅ | `.env`, `.env.example`, `application.properties`, `docker-compose.yml`, `.gitignore`. Решение задокументировано в [DECISIONS.md](DECISIONS.md) (ADR-001) |
-| 0.2 | Исправить CORS: `"*"` → `${ALLOWED_ORIGINS}` | ✅ | `CorsConfig.java`. ADR-002 в DECISIONS.md |
-| 0.3 | Добавить Flyway: зависимость + `V1__init_schema.sql` | ✅ | `flyway-core` + `flyway-database-postgresql` в pom.xml, `V1__init_schema.sql`, `baseline-on-migrate=true`. ADR-003 в DECISIONS.md |
+| 0.1 | Вынести секреты: `JWT_SECRET`, `DB_PASSWORD`, `OPENAI_API_KEY`, `ALLOWED_ORIGINS` в `.env` | ✅ | `.env`, `.env.example`, `application.properties`, `docker-compose.yml`, `.gitignore` |
+| 0.2 | Исправить CORS: `"*"` → `${ALLOWED_ORIGINS}` | ✅ | `CorsConfig.java` |
+| 0.3 | Добавить Flyway: зависимость + `V1__init_schema.sql` | ✅ | `flyway-core` + `flyway-database-postgresql` в pom.xml, `V1__init_schema.sql`, `baseline-on-migrate=true` |
 | 0.4 | Переключить `ddl-auto=validate` | ✅ | `application.properties`: `update` → `validate` |
 | 0.5 | Создать `WorkoutRequest.java` DTO | ✅ | `workout/WorkoutRequest.java` с `@NotBlank`, `@Positive`, `@PositiveOrZero`, `@NotNull` |
 | 0.6 | Создать `HealthMetricRequest.java` DTO | ✅ | `metrics/HealthMetricRequest.java` + MetricsController + MetricsService |
@@ -31,12 +31,12 @@
 | 0.9 | Починить `ProfileController`: убрать прямой `ProfileRepository`, использовать `ProfileService` | ✅ | Убраны `profileRepository` + `userService`; добавлены `ProfileService.update()` и `.getOnboardingStatus()` |
 | 0.10 | Починить `OnboardingController`: убрать дублирование, вызывать `ProfileService.completeOnboarding()` | ✅ | Убраны `profileRepository` + `userService`; логика status() перенесена в `ProfileService.getOnboardingStatus()` |
 | 0.11 | Убрать `ProfileRepository`, `MealRepository`, `WorkoutRepository`, `MetricsRepository` из `AIController` | ✅ | 4 репозитория перенесены в `AIService.buildContext()`; контроллер инжектит только AIService + UserService |
-| 0.12 | Исправить расчёт калорий: `calories = calories_per_100g * quantity / 100` | ⬜ | Баг: quantity сейчас игнорируется |
+| 0.12 | Исправить расчёт калорий: `calories = calories_per_100g * quantity / 100` | ✅ | V2-миграция: `calories` → `calories_per_100g`; `quantity` NOT NULL; формула в CaloriesCalculator и AIService |
 | 0.13 | Добавить handler `IllegalStateException` → 400 в `GlobalExceptionHandler` | ✅ | `GlobalExceptionHandler`: новый `@ExceptionHandler(IllegalStateException.class)` → 400 |
-| 0.14 | Добавить `@Transactional` на `updateWorkout`, `deleteWorkout` в `WorkoutService` | ⬜ | |
-| 0.15 | Добавить `@Transactional` на `updateMetric`, `deleteMetric` в `MetricsService` | ⬜ | |
-| 0.16 | Исправить N+1 в `NutritionService.addItemsToMeal()`: `saveAll()` вместо цикла | ⬜ | |
-| 0.17 | Починить пакет теста: `com.example.demo` → `kz.nutrifit.backend` | ⬜ | |
+| 0.14 | Добавить `@Transactional` на `updateWorkout`, `deleteWorkout` в `WorkoutService` | ✅ | Добавлен и на `createWorkout` — он тоже отсутствовал |
+| 0.15 | Добавить `@Transactional` на `updateMetric`, `deleteMetric` в `MetricsService` | ✅ | Добавлен и на `createMetric` — он тоже отсутствовал |
+| 0.16 | Исправить N+1 в `NutritionService.addItemsToMeal()`: `saveAll()` вместо цикла | ✅ | `stream().map().toList()` + `saveAll()` |
+| 0.17 | Починить пакет теста: `com.example.demo` → `kz.nutrifit.backend` | ✅ | Новый тест + H2 + `@ActiveProfiles("test")` + `application-test.properties`; старый файл удалить вручную |
 | 0.18 | Написать unit-тесты: `CaloriesCalculatorTest`, `AuthServiceTest`, `ProfileServiceTest` | ⬜ | |
 | 0.19 | Удалить `.idea` из git: `git rm -r --cached .idea` | ⬜ | Пользователь делает сам |
 

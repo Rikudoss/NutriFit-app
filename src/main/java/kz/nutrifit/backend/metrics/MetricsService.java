@@ -3,6 +3,7 @@ package kz.nutrifit.backend.metrics;
 import kz.nutrifit.backend.exception.NotFoundException;
 import kz.nutrifit.backend.user.User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class MetricsService {
         this.metricsRepository = metricsRepository;
     }
 
+    @Transactional
     public HealthMetric createMetric(HealthMetricRequest request, User user) {
         HealthMetric metric = new HealthMetric();
         metric.setSteps(request.getSteps());
@@ -30,6 +32,7 @@ public class MetricsService {
         return metricsRepository.findAllByUser(user);
     }
 
+    @Transactional
     public HealthMetric updateMetric(Long id, HealthMetricRequest request, User user) {
         HealthMetric existing = metricsRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Metric not found"));
@@ -44,6 +47,7 @@ public class MetricsService {
         return metricsRepository.save(existing);
     }
 
+    @Transactional
     public void deleteMetric(Long id, User user) {
         HealthMetric existing = metricsRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Metric not found"));

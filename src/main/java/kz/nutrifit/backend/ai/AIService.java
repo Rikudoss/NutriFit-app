@@ -122,8 +122,8 @@ public class AIService {
     }
 
     private String formatMealItem(MealItem item) {
-        return String.format("%s %.1fg (%.1f kcal)", item.getName(),
-                item.getQuantity() != null ? item.getQuantity() : 1.0,
-                item.getCalories());
+        double qty = item.getQuantity() != null ? item.getQuantity() : 0.0;
+        double kcal = item.getCaloriesPer100g() != null ? item.getCaloriesPer100g() * qty / 100.0 : 0.0;
+        return String.format("%s %.1fg (%.1f kcal)", item.getName(), qty, kcal);
     }
 }

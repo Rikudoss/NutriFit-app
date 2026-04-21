@@ -20,7 +20,10 @@ public class MealItem {
     private Long id;
 
     private String name;
-    private Double calories;
+
+    @Column(name = "calories_per_100g")
+    private Double caloriesPer100g;
+
     private Double protein;
     private Double carbs;
     private Double fat;

@@ -67,18 +67,18 @@ public class NutritionService {
     }
 
     private void addItemsToMeal(Meal meal, List<MealItemRequest> items) {
-        for (MealItemRequest itemRequest : items) {
-            MealItem item = MealItem.builder()
-                    .name(itemRequest.getName())
-                    .calories(itemRequest.getCalories())
-                    .protein(itemRequest.getProtein())
-                    .carbs(itemRequest.getCarbs())
-                    .fat(itemRequest.getFat())
-                    .quantity(itemRequest.getQuantity())
-                    .meal(meal)
-                    .build();
-            meal.getItems().add(item);
-            mealItemRepository.save(item);
-        }
+        List<MealItem> mealItems = items.stream()
+                .map(req -> MealItem.builder()
+                        .name(req.getName())
+                        .caloriesPer100g(req.getCaloriesPer100g())
+                        .protein(req.getProtein())
+                        .carbs(req.getCarbs())
+                        .fat(req.getFat())
+                        .quantity(req.getQuantity())
+                        .meal(meal)
+                        .build())
+                .toList();
+        meal.getItems().addAll(mealItems);
+        mealItemRepository.saveAll(mealItems);
     }
 }

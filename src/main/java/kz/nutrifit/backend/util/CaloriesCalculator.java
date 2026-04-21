@@ -10,7 +10,9 @@ public class CaloriesCalculator {
 
     public static double calculateTotalCalories(List<MealItem> items) {
         return items.stream()
-                .mapToDouble(item -> item.getCalories() != null ? item.getCalories() : 0.0)
+                .mapToDouble(item -> item.getCaloriesPer100g() != null && item.getQuantity() != null
+                        ? item.getCaloriesPer100g() * item.getQuantity() / 100.0
+                        : 0.0)
                 .sum();
     }
 }
