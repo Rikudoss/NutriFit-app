@@ -8,7 +8,7 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 1 — Инфраструктура  
-**Активная задача:** 1.3 — Discovery Server (Eureka)  
+**Активная задача:** 1.4 — API Gateway  
 **Последнее обновление:** 2026-04-21  
 **Сессия:** #3 (монорепо, multi-module Maven, переезд монолита в services/monolith)
 
@@ -48,7 +48,7 @@
 |---|---|---|---|
 | 1.1 | Multi-module Maven: parent pom.xml + services/monolith/, docker/, infrastructure/ | ✅ | `src/` → `services/monolith/src/`; `docker-compose.yml` → `docker/`; `infrastructure/config-server/` и `infrastructure/discovery-server/` заготовлены |
 | 1.2 | Создать `infrastructure/config-server` | ✅ | Spring Cloud Config, native backend, classpath:/configs/; конфиги: application.yml (shared) + monolith.yml |
-| 1.3 | Создать `infrastructure/discovery-server` (Eureka) | ⬜ | |
+| 1.3 | Создать `infrastructure/discovery-server` (Eureka) | ✅ | @EnableEurekaServer, порт 8761, self-preservation отключён для локальной разработки |
 | 1.4 | Создать `services/api-gateway` (Spring Cloud Gateway) | ⬜ | |
 | 1.5 | Docker Compose: PostgreSQL, Redis, Kafka+ZK, Zipkin, Prometheus, Grafana | ⬜ | |
 | 1.6 | Dockerfile для монолита (multi-stage build) | ⬜ | |

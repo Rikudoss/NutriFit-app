@@ -45,6 +45,7 @@
     <modules>
         <module>services/monolith</module>
         <module>infrastructure/config-server</module>
+        <module>infrastructure/discovery-server</module>
     </modules>
 
 </project>

@@ -1,0 +1,23 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: discovery-server
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: false   # сам себя не регистрирует
+    fetch-registry: false         # не тянет реестр — он сам и есть реестр
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    enable-self-preservation: false   # локальная разработка — отключаем ложные тревоги
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
