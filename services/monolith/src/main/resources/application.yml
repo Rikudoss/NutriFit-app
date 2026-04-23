@@ -1,0 +1,21 @@
+# Bootstrap монолита.
+# По этому имени:
+#   - Config Server отдаёт конфиг (monolith.yml)
+#   - Eureka регистрирует сервис (MONOLITH в реестре)
+# Остальные настройки тянутся с config-server; секреты — из application.properties + .env.
+spring:
+  application:
+    name: monolith
+  config:
+    # optional: — старт не падает, если config-server недоступен
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+  cloud:
+    config:
+      fail-fast: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
