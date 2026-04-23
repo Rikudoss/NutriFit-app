@@ -1,0 +1,31 @@
+# Build artifacts
+target/
+services/*/target/
+infrastructure/*/target/
+
+# IDE
+.idea/
+*.iml
+
+# Git
+.git/
+.gitignore
+
+# Maven wrapper — не используется внутри образа
+.mvn/
+mvnw
+mvnw.cmd
+
+# Документация (кроме README)
+*.md
+!README.md
+
+# Секреты / окружение
+.env
+.env.example
+
+# Docker compose — не нужен для сборки образа
+docker/
+
+# Логи
+*.log
