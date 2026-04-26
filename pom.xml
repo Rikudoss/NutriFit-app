@@ -47,6 +47,7 @@
         <module>infrastructure/config-server</module>
         <module>infrastructure/discovery-server</module>
         <module>services/api-gateway</module>
+        <module>services/auth-service</module>
     </modules>
 
 </project>

@@ -14,6 +14,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-nutrifit_ai}"]
       interval: 10s
@@ -205,6 +206,44 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - nutrifit-network
+
+  # ──────────────────────────────────────────
+  # Auth Service (Шаг A Фазы 2)
+  # Своя БД auth_db. Пока работает параллельно монолиту,
+  # Gateway переключится на него в Шаге C.
+  # ──────────────────────────────────────────
+  nutrifit-auth-service:
+    build:
+      context: ../
+      dockerfile: services/auth-service/Dockerfile
+    image: nutrifit-auth-service:local
+    container_name: nutrifit-auth-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://nutrifit-postgres:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CONFIG_SERVER_URL: http://nutrifit-config-server:8888
+      EUREKA_SERVER_URL: http://nutrifit-discovery-server:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: nutrifit-auth-service
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      nutrifit-postgres:
+        condition: service_healthy
+      nutrifit-config-server:
+        condition: service_healthy
+      nutrifit-discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10

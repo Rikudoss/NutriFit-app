@@ -1,0 +1,20 @@
+# Bootstrap auth-service.
+# По имени spring.application.name=auth-service:
+#   - Config Server отдаёт auth-service.yml
+#   - Eureka регистрирует сервис как AUTH-SERVICE
+spring:
+  application:
+    name: auth-service
+  config:
+    # optional: — старт не падает, если config-server недоступен
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+  cloud:
+    config:
+      fail-fast: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true

@@ -8,9 +8,9 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 2 — auth-service + email-верификация  
-**Активная задача:** 2.1 — Создать Spring Boot проект auth-service  
+**Активная задача:** 2.4 — Реализовать `EmailVerificationService` (Шаг B)  
 **Последнее обновление:** 2026-04-26  
-**Сессия:** #5 (закрытие Фазы 1: Eureka client в монолите, Eureka client + lb:// в Gateway, полный docker-compose с 4 Spring-сервисами)
+**Сессия:** #6 (Шаг A Фазы 2: auth-service создан, своя БД auth_db, регистрация в Eureka как AUTH-SERVICE, работает параллельно монолиту)
 
 ---
 
@@ -61,8 +61,8 @@
 
 | # | Задача | Статус | Заметки |
 |---|---|---|---|
-| 2.1 | Создать Spring Boot проект auth-service | ⬜ | |
-| 2.2 | Перенести: User, UserRepository, AuthService, JwtUtil, JwtConfig | ⬜ | |
+| 2.1 | Создать Spring Boot проект auth-service (Шаг A) | ✅ | Модуль `services/auth-service/`, отдельная БД `auth_db` в PostgreSQL (создаётся init-скриптом `docker/postgres-init/01-create-databases.sh`), конфиг на Config Server (`auth-service.yml`), порт 8082, multi-stage Dockerfile, в docker-compose с healthcheck `/actuator/health`, регистрация в Eureka как AUTH-SERVICE через lb. Работает параллельно монолиту, gateway пока проксирует на монолит — переключение в Шаге C |
+| 2.2 | Перенести: User, UserRepository, AuthService, JwtUtil, JwtConfig | ✅ | Скопировано из монолита `kz.nutrifit.backend.auth.* + .config.{JwtConfig,JwtAuthenticationFilter}` → `kz.nutrifit.auth.*` (controller/service/dto/util/filter/config/entity/repository). User entity без связи с Profile, добавлены поля `status`, `created_at`, `updated_at`. AuthService.register() БЕЗ создания Profile (TODO Фазы 3 — публиковать `user.registered` в Kafka). Status=ACTIVE по дефолту до Шага B. SecurityConfig упрощён: всё permitAll кроме фильтра JWT (auth-service сам не имеет защищённых эндпоинтов). UserDetailsService — inline бин в SecurityConfig поверх UserRepository (отдельный UserService не делал, в Фазе 3 он живёт в user-service) |
 | 2.3 | Добавить `email_verifications` таблицу | ⬜ | |
 | 2.4 | Реализовать `EmailVerificationService` | ⬜ | |
 | 2.5 | Статусы UNVERIFIED/ACTIVE в User | ⬜ | |
@@ -197,6 +197,7 @@
 | 2026-04-21 | #3 | Фаза 0 закрыта (0.1–0.17 ✅). Задача 1.1: монорепо — parent pom.xml, services/monolith/, docker/, infrastructure/ | Задача 1.2 — config-server |
 | 2026-04-23 | #4 | Задача 1.6: Dockerfile монолита (multi-stage, layered JAR, non-root spring:spring), `.dockerignore` в корне. Образ `nutrifit-monolith:local` 404 MB, запуск в сети `docker_nutrifit-network` проверен — Flyway валидный, Swagger 200 | Задача 1.7 — подключить монолит к Eureka + Config Server |
 | 2026-04-26 | #5 | Фаза 1 закрыта (1.7, 1.8): Eureka client везде, lb://monolith, полный docker-compose стек 10/10 healthy | Фаза 2.1 — создать auth-service |
+| 2026-04-26 | #6 | Фаза 2 Шаг A: auth-service создан, своя БД auth_db, регистрация в Eureka как AUTH-SERVICE, работает параллельно монолиту | Фаза 2 Шаг B — email-верификация (UNVERIFIED→ACTIVE, Redis, Mailtrap) |
 
 ---
 
