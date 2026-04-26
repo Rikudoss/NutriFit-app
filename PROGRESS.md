@@ -7,10 +7,10 @@
 
 ## Текущий статус
 
-**Активная фаза:** Фаза 1 — Инфраструктура  
-**Активная задача:** 1.7 — Подключить монолит к Eureka + Config Server  
-**Последнее обновление:** 2026-04-23  
-**Сессия:** #4 (Dockerfile монолита: multi-stage, layered JAR, non-root)
+**Активная фаза:** Фаза 2 — auth-service + email-верификация  
+**Активная задача:** 2.1 — Создать Spring Boot проект auth-service  
+**Последнее обновление:** 2026-04-26  
+**Сессия:** #5 (закрытие Фазы 1: Eureka client в монолите, Eureka client + lb:// в Gateway, полный docker-compose с 4 Spring-сервисами)
 
 ---
 
@@ -52,8 +52,8 @@
 | 1.4 | Создать `services/api-gateway` (Spring Cloud Gateway) | ✅ | Reactive/Netty, порт 8080, статический роут /api/** → localhost:8081, CORS через globalcors; монолит переехал на 8081 |
 | 1.5 | Docker Compose: PostgreSQL 16, Redis 7, Kafka+ZK, Zipkin | ✅ | nutrifit-network, named volumes, healthchecks, restart: unless-stopped; Spring-сервисы добавим в 1.6 |
 | 1.6 | Dockerfile для монолита (multi-stage build) | ✅ | `services/monolith/Dockerfile` + корневой `.dockerignore`. Builder на `temurin:21-jdk-alpine` + Maven, layered JAR через `jarmode=layertools`, runtime на `temurin:21-jre-alpine` под non-root `spring:spring`. Образ 404 MB, старт 6.6 сек, подключение к `nutrifit-postgres` в сети `docker_nutrifit-network` проверено |
-| 1.7 | Подключить монолит к Eureka + Config Server | ⬜ | |
-| 1.8 | Настроить роутинг Gateway → монолит | ⬜ | |
+| 1.7 | Подключить монолит к Eureka + Config Server | ✅ | `spring-cloud-starter-config` + `spring-cloud-starter-netflix-eureka-client` в pom.xml монолита. `application.yml`: `spring.application.name=monolith`, `spring.config.import=optional:configserver:http://localhost:8888`, `eureka.client.service-url`, `prefer-ip-address=true`. Конфиги переехали в `configs/monolith.yml` на config-server, секреты остались в `.env`. Монолит регистрируется в Eureka как MONOLITH, тянет конфиг с config-server |
+| 1.8 | Настроить роутинг Gateway → монолит (lb://) + docker-compose со Spring-сервисами | ✅ | Gateway → `lb://monolith` через Eureka (вместо статического `http://localhost:8081`). Dockerfile для `config-server`, `discovery-server`, `api-gateway` (multi-stage по аналогии с monolith). `docker-compose.yml` расширен 4 Spring-сервисами с healthchecks `/actuator/health`, `depends_on: service_healthy`, `EUREKA_INSTANCE_HOSTNAME` для контейнерной резолюции. Все 10 контейнеров healthy. E2E: API-GATEWAY + MONOLITH в Eureka registry, `GET /api/profile` через 8080 → 403 (как при прямом запросе на 8081) — `lb://` балансит корректно. В монолит добавлен `spring-boot-starter-actuator` и `/actuator/**` в permitAll для healthcheck |
 
 ---
 
@@ -196,6 +196,7 @@
 | 2026-04-17 | #2 | Задача 0.3 выполнена: Flyway добавлен, V1__init_schema.sql создан | Задача 0.4 — переключить ddl-auto=validate |
 | 2026-04-21 | #3 | Фаза 0 закрыта (0.1–0.17 ✅). Задача 1.1: монорепо — parent pom.xml, services/monolith/, docker/, infrastructure/ | Задача 1.2 — config-server |
 | 2026-04-23 | #4 | Задача 1.6: Dockerfile монолита (multi-stage, layered JAR, non-root spring:spring), `.dockerignore` в корне. Образ `nutrifit-monolith:local` 404 MB, запуск в сети `docker_nutrifit-network` проверен — Flyway валидный, Swagger 200 | Задача 1.7 — подключить монолит к Eureka + Config Server |
+| 2026-04-26 | #5 | Фаза 1 закрыта (1.7, 1.8): Eureka client везде, lb://monolith, полный docker-compose стек 10/10 healthy | Фаза 2.1 — создать auth-service |
 
 ---
 
