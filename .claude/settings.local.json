@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:spring.io)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(docker compose *)",
+      "Bash(curl -s -H \"Accept: application/json\" http://localhost:8761/eureka/apps)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); apps=d.get\\('applications',{}\\).get\\('application',[]\\); [print\\(a['name'], '->', [i['hostName']+':'+str\\(i['port']['$']\\) for i in \\(a['instance'] if isinstance\\(a['instance'],list\\) else [a['instance']]\\)]\\) for a in apps]\")",
+      "Bash(curl -s -H \"Accept: application/json\" http://localhost:8761/eureka/apps -o /tmp/eureka.json)",
+      "Read(//tmp/**)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); apps=d.get\\('applications',{}\\).get\\('application',[]\\); print\\('Registered services:'\\); [print\\(' -', a['name'], '@', [i.get\\('ipAddr'\\)+':'+str\\(i['port']['\\\\$']\\) for i in \\(a['instance'] if isinstance\\(a['instance'],list\\) else [a['instance']]\\)]\\) for a in apps]\")"
     ]
   }
 }

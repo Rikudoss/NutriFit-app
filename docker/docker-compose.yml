@@ -124,6 +124,126 @@ services:
     networks:
       - nutrifit-network
 
+  # ══════════════════════════════════════════
+  # SPRING CLOUD INFRASTRUCTURE
+  # ══════════════════════════════════════════
+
+  # ──────────────────────────────────────────
+  # Config Server (Spring Cloud Config)
+  # Раздаёт конфиги клиентам по spring.application.name
+  # ──────────────────────────────────────────
+  nutrifit-config-server:
+    build:
+      context: ../
+      dockerfile: infrastructure/config-server/Dockerfile
+    image: nutrifit-config-server:local
+    container_name: nutrifit-config-server
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8888/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - nutrifit-network
+
+  # ──────────────────────────────────────────
+  # Discovery Server (Eureka)
+  # Реестр сервисов: monolith, api-gateway регистрируются здесь
+  # ──────────────────────────────────────────
+  nutrifit-discovery-server:
+    build:
+      context: ../
+      dockerfile: infrastructure/discovery-server/Dockerfile
+    image: nutrifit-discovery-server:local
+    container_name: nutrifit-discovery-server
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: nutrifit-discovery-server
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - nutrifit-network
+
+  # ──────────────────────────────────────────
+  # Monolith (Spring Boot)
+  # Подтягивает конфиг с config-server, регистрируется в Eureka
+  # ──────────────────────────────────────────
+  nutrifit-monolith:
+    build:
+      context: ../
+      dockerfile: services/monolith/Dockerfile
+    image: nutrifit-monolith:local
+    container_name: nutrifit-monolith
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://nutrifit-postgres:5432/${DB_NAME:-nutrifit_ai}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CONFIG_SERVER_URL: http://nutrifit-config-server:8888
+      EUREKA_SERVER_URL: http://nutrifit-discovery-server:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: nutrifit-monolith
+      JWT_SECRET: ${JWT_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+    depends_on:
+      nutrifit-postgres:
+        condition: service_healthy
+      nutrifit-config-server:
+        condition: service_healthy
+      nutrifit-discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - nutrifit-network
+
+  # ──────────────────────────────────────────
+  # API Gateway (Spring Cloud Gateway)
+  # Проксирует /api/** → lb://monolith через Eureka
+  # ──────────────────────────────────────────
+  nutrifit-api-gateway:
+    build:
+      context: ../
+      dockerfile: services/api-gateway/Dockerfile
+    image: nutrifit-api-gateway:local
+    container_name: nutrifit-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_SERVER_URL: http://nutrifit-discovery-server:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: nutrifit-api-gateway
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+    depends_on:
+      nutrifit-discovery-server:
+        condition: service_healthy
+      nutrifit-monolith:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - nutrifit-network
+
 # ──────────────────────────────────────────
 networks:
   nutrifit-network:
