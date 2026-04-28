@@ -8,9 +8,9 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 2 — auth-service + email-верификация  
-**Активная задача:** 2.4 — Реализовать `EmailVerificationService` (Шаг B)  
-**Последнее обновление:** 2026-04-26  
-**Сессия:** #6 (Шаг A Фазы 2: auth-service создан, своя БД auth_db, регистрация в Eureka как AUTH-SERVICE, работает параллельно монолиту)
+**Активная задача:** 2.13 — Gateway: проверка JWT (Шаг C)  
+**Последнее обновление:** 2026-04-28  
+**Сессия:** #7 (Шаг B Фазы 2: email-верификация — V2 миграция, EmailVerificationService с Redis+DB, MailService через Mailtrap SMTP, Kafka publish, rate limiting)
 
 ---
 
@@ -63,13 +63,13 @@
 |---|---|---|---|
 | 2.1 | Создать Spring Boot проект auth-service (Шаг A) | ✅ | Модуль `services/auth-service/`, отдельная БД `auth_db` в PostgreSQL (создаётся init-скриптом `docker/postgres-init/01-create-databases.sh`), конфиг на Config Server (`auth-service.yml`), порт 8082, multi-stage Dockerfile, в docker-compose с healthcheck `/actuator/health`, регистрация в Eureka как AUTH-SERVICE через lb. Работает параллельно монолиту, gateway пока проксирует на монолит — переключение в Шаге C |
 | 2.2 | Перенести: User, UserRepository, AuthService, JwtUtil, JwtConfig | ✅ | Скопировано из монолита `kz.nutrifit.backend.auth.* + .config.{JwtConfig,JwtAuthenticationFilter}` → `kz.nutrifit.auth.*` (controller/service/dto/util/filter/config/entity/repository). User entity без связи с Profile, добавлены поля `status`, `created_at`, `updated_at`. AuthService.register() БЕЗ создания Profile (TODO Фазы 3 — публиковать `user.registered` в Kafka). Status=ACTIVE по дефолту до Шага B. SecurityConfig упрощён: всё permitAll кроме фильтра JWT (auth-service сам не имеет защищённых эндпоинтов). UserDetailsService — inline бин в SecurityConfig поверх UserRepository (отдельный UserService не делал, в Фазе 3 он живёт в user-service) |
-| 2.3 | Добавить `email_verifications` таблицу | ⬜ | |
-| 2.4 | Реализовать `EmailVerificationService` | ⬜ | |
-| 2.5 | Статусы UNVERIFIED/ACTIVE в User | ⬜ | |
+| 2.3 | Добавить `email_verifications` таблицу | ✅ | V2 миграция: `ALTER TABLE users SET DEFAULT 'UNVERIFIED'` + `verified_at TIMESTAMP`, существующие сохранены ACTIVE через `UPDATE ... WHERE status='ACTIVE'`. Таблица `email_verifications` (user_id FK CASCADE, code VARCHAR(6), expires_at, attempts, used_at) + индексы по user_id и expires_at |
+| 2.4 | Реализовать `EmailVerificationService` | ✅ | Дубль Redis + БД: код пишется в обе. Redis `verification:user:{userId}` TTL 10 мин (быстрая проверка), БД для аудита и fallback. 6-значный код (`SecureRandom.nextInt(1_000_000)` → `%06d`). Max 5 попыток ввода → удаление ключа из Redis |
+| 2.5 | Статусы UNVERIFIED/ACTIVE в User | ✅ | `register` создаёт UNVERIFIED, `login` с UNVERIFIED → IllegalStateException → 403, `verify` ставит ACTIVE + `verified_at=now()`. RegisterResponse без JWT, JWT выдаётся только после verify/login |
 | 2.6 | Refresh tokens (таблица + логика) | ⬜ | |
-| 2.7 | Rate limiting на верификацию (Redis) | ⬜ | |
-| 2.8 | Spring Mail + Mailtrap | ⬜ | |
-| 2.9 | Kafka: публикация `user.registered`, `user.verified` | ⬜ | |
+| 2.7 | Rate limiting на верификацию (Redis) | ✅ | `verification:resend:user:{userId}` через `setIfAbsent` с TTL 60 сек. Если ключ уже есть — IllegalStateException → 403 |
+| 2.8 | Spring Mail + Mailtrap | ✅ | `spring-boot-starter-mail`, JavaMailSender → `sandbox.smtp.mailtrap.io:2525` (STARTTLS+auth). Креды в `.env` (MAILTRAP_*), SMTP пароль через `application.properties` → `${MAILTRAP_PASSWORD}`, остальное в config-server |
+| 2.9 | Kafka: публикация `user.registered`, `user.verified` | ✅ | `UserEventPublisher` через `KafkaTemplate<String, Object>`, JsonSerializer, topic `user-events`. Только publish — consumers в Фазе 3 (user-service). Если Kafka недоступна — `log.error`, не падаем (try-catch вокруг send) |
 | 2.10 | Flyway миграции для auth_db | ⬜ | |
 | 2.11 | Unit тесты: AuthService, JwtUtil, EmailVerificationService | ⬜ | |
 | 2.12 | Integration тесты (Testcontainers: PostgreSQL + Redis) | ⬜ | |
@@ -198,6 +198,7 @@
 | 2026-04-23 | #4 | Задача 1.6: Dockerfile монолита (multi-stage, layered JAR, non-root spring:spring), `.dockerignore` в корне. Образ `nutrifit-monolith:local` 404 MB, запуск в сети `docker_nutrifit-network` проверен — Flyway валидный, Swagger 200 | Задача 1.7 — подключить монолит к Eureka + Config Server |
 | 2026-04-26 | #5 | Фаза 1 закрыта (1.7, 1.8): Eureka client везде, lb://monolith, полный docker-compose стек 10/10 healthy | Фаза 2.1 — создать auth-service |
 | 2026-04-26 | #6 | Фаза 2 Шаг A: auth-service создан, своя БД auth_db, регистрация в Eureka как AUTH-SERVICE, работает параллельно монолиту | Фаза 2 Шаг B — email-верификация (UNVERIFIED→ACTIVE, Redis, Mailtrap) |
+| 2026-04-28 | #7 | Шаг B Фазы 2: email-верификация (V2 миграция, EmailVerificationService с Redis+DB, MailService через Mailtrap SMTP, Kafka publish, rate limiting) | Шаг C — переключить Gateway на auth-service |
 
 ---
 
@@ -218,3 +219,6 @@
 | TD-1 | Добавить `spring.jpa.open-in-view=false` в `application.properties` | Hibernate предупреждает при старте: Open Session In View держит транзакцию открытой на время HTTP-запроса, что провоцирует lazy-loading в контроллерах и скрывает N+1 проблемы |
 | TD-3 | `/actuator/gateway/routes` возвращает 404 в Spring Cloud Gateway 4.3.x (2025.0.2) | Разобраться с `management.endpoint.gateway.access` / `enabled` в новой версии. Не блокер — роуты проверяются через `application.yml` и прямые запросы к `/api/**` |
 | TD-4 | `mvn ... -Djarmode=layertools` в Dockerfile монолита помечен deprecated в Spring Boot 3.5 | Мигрировать на `-Djarmode=tools extract --layers --launcher` при следующей правке Dockerfile. Сейчас работает, не блокер |
+| TD-7 | Смешивание `LocalDateTime` (EmailVerification) и `Instant` (User) в auth-service | Унифицировать на `Instant` — полей `expiresAt`, `createdAt`, `usedAt` в `EmailVerification`, плюс `LocalDateTime.now()` в `EmailVerificationService`. Сейчас работает (Hibernate маппит обоих в `TIMESTAMP`), но даёт несогласованность по timezone-семантике |
+| TD-8 | Race condition в `EmailVerificationService.verifyCode`: read из Redis + delete — две операции | Использовать `redisTemplate.opsForValue().getAndDelete(key)` (атомарно). Сейчас при одновременном `verify` от двух воркеров теоретически оба могут увидеть код «успешным» до удаления. Для нагруженного прод-сценария — починить |
+| ~~TD-9~~ | ~~`attempts` в `email_verifications` НЕ инкрементируется при неверном коде~~ | **Закрыт в сессии #7.** Создан отдельный `@Service AttemptsTracker.increment()` с `@Transactional(propagation = REQUIRES_NEW)` — инкремент коммитится независимо от внешней транзакции `verifyEmail`. Заодно закрыт связанный баг: после исчерпания 5 попыток ключ удалялся из Redis, но в БД `expires_at` в будущем — fallback позволял пройти 6-ю попытку с правильным кодом. Добавлена проверка `active.getAttempts() >= MAX_ATTEMPTS` в DB-пути ДО сравнения кода. Подтверждено e2e: 5 неверных → attempts=5 + Redis удалён; 6-я с правильным кодом → 400, юзер остался UNVERIFIED |

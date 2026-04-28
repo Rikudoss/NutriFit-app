@@ -37,16 +37,19 @@ public class User implements UserDetails {
     @Builder.Default
     private String role = "USER";
 
-    // Шаг A: всегда ACTIVE. Шаг B вернёт UNVERIFIED → ACTIVE через email-верификацию.
+    // Шаг B: новые пользователи создаются как UNVERIFIED, переходят в ACTIVE после ввода кода.
     @Column(nullable = false)
     @Builder.Default
-    private String status = "ACTIVE";
+    private String status = "UNVERIFIED";
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "verified_at")
+    private Instant verifiedAt;
 
     @PrePersist
     void onCreate() {

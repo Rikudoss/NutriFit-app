@@ -235,12 +235,23 @@ services:
       EUREKA_SERVER_URL: http://nutrifit-discovery-server:8761/eureka/
       EUREKA_INSTANCE_HOSTNAME: nutrifit-auth-service
       JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: nutrifit-redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP: nutrifit-kafka:29092
+      MAILTRAP_HOST: ${MAILTRAP_HOST}
+      MAILTRAP_PORT: ${MAILTRAP_PORT}
+      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME}
+      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD}
     depends_on:
       nutrifit-postgres:
         condition: service_healthy
       nutrifit-config-server:
         condition: service_healthy
       nutrifit-discovery-server:
+        condition: service_healthy
+      nutrifit-redis:
+        condition: service_healthy
+      nutrifit-kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/actuator/health || exit 1"]
