@@ -20,9 +20,9 @@ import org.springframework.stereotype.Component;
  * @GeneratedValue(IDENTITY): JPA save() с явно установленным id игнорирует id
  * и просит SERIAL подставить новый. Native SQL даёт явный контроль над id.
  *
- * После insert сдвигаем sequence: монолит пока имеет свой AuthService.register()
- * (он будет удалён в C.2), который дальше создаёт юзеров через IDENTITY. Без
- * setval следующий локальный register получит id, уже занятый из auth-service.
+ * После C.2 локальный register удалён — sequence в монолите больше никем не
+ * используется кроме этого consumer-а, но setval оставлен для defense-in-depth
+ * на случай ручных вставок в БД.
  */
 @Component
 @Slf4j

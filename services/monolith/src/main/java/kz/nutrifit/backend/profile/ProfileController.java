@@ -2,8 +2,7 @@ package kz.nutrifit.backend.profile;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,19 +16,22 @@ public class ProfileController {
     }
 
     @GetMapping
-    public ResponseEntity<ProfileResponse> getProfile(@AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(profileService.toResponse(profileService.getByEmail(principal.getUsername())));
+    public ResponseEntity<ProfileResponse> getProfile(Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        return ResponseEntity.ok(profileService.toResponse(profileService.getOrCreate(userId)));
     }
 
     @PutMapping
-    public ResponseEntity<ProfileResponse> updateProfile(@AuthenticationPrincipal UserDetails principal,
+    public ResponseEntity<ProfileResponse> updateProfile(Authentication authentication,
                                                          @RequestBody @Valid ProfilePatchRequest req) {
-        return ResponseEntity.ok(profileService.update(principal.getUsername(), req));
+        Long userId = (Long) authentication.getPrincipal();
+        return ResponseEntity.ok(profileService.update(userId, req));
     }
 
     @PatchMapping
-    public ResponseEntity<ProfileResponse> patchProfile(@AuthenticationPrincipal UserDetails principal,
+    public ResponseEntity<ProfileResponse> patchProfile(Authentication authentication,
                                                         @RequestBody @Valid ProfilePatchRequest req) {
-        return ResponseEntity.ok(profileService.patch(principal.getUsername(), req));
+        Long userId = (Long) authentication.getPrincipal();
+        return ResponseEntity.ok(profileService.patch(userId, req));
     }
 }

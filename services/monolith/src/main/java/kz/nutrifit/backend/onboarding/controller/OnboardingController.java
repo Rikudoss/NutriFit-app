@@ -3,8 +3,7 @@ package kz.nutrifit.backend.onboarding.controller;
 import kz.nutrifit.backend.onboarding.dto.OnboardingStatusResponse;
 import kz.nutrifit.backend.profile.ProfileService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,13 +17,15 @@ public class OnboardingController {
     }
 
     @GetMapping
-    public ResponseEntity<OnboardingStatusResponse> status(@AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(profileService.getOnboardingStatus(principal.getUsername()));
+    public ResponseEntity<OnboardingStatusResponse> status(Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        return ResponseEntity.ok(profileService.getOnboardingStatus(userId));
     }
 
     @PostMapping("/complete")
-    public ResponseEntity<Void> complete(@AuthenticationPrincipal UserDetails principal) {
-        profileService.completeOnboarding(principal.getUsername());
+    public ResponseEntity<Void> complete(Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        profileService.completeOnboarding(userId);
         return ResponseEntity.ok().build();
     }
 }

@@ -1,6 +1,8 @@
 package kz.nutrifit.backend.profile;
 
 import kz.nutrifit.backend.onboarding.dto.OnboardingStatusResponse;
+import kz.nutrifit.backend.user.User;
+import kz.nutrifit.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,10 +12,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileService {
 
     private final ProfileRepository profileRepository;
+    private final UserRepository userRepository;
 
-    public Profile getByEmail(String email) {
-        return profileRepository.findByUser_Email(email)
-                .orElseThrow(() -> new IllegalStateException("Profile not found for user: " + email));
+    /**
+     * Lazy-create: после удаления локального register в C.2 свежие юзеры приходят из auth-service
+     * через Kafka и в монолите профиль ещё не существует. Создаём пустой при первом обращении.
+     */
+    @Transactional
+    public Profile getOrCreate(Long userId) {
+        return profileRepository.findByUser_Id(userId).orElseGet(() -> {
+            User userRef = userRepository.getReferenceById(userId);
+            Profile profile = Profile.builder().user(userRef).build();
+            return profileRepository.save(profile);
+        });
     }
 
     public ProfileResponse toResponse(Profile p) {
@@ -30,8 +41,8 @@ public class ProfileService {
     }
 
     @Transactional
-    public ProfileResponse patch(String email, ProfilePatchRequest req) {
-        Profile p = getByEmail(email);
+    public ProfileResponse patch(Long userId, ProfilePatchRequest req) {
+        Profile p = getOrCreate(userId);
 
         if (req.getFullName() != null) p.setFullName(req.getFullName());
         if (req.getGender() != null) p.setGender(req.getGender());
@@ -40,13 +51,12 @@ public class ProfileService {
         if (req.getWeightKg() != null) p.setWeightKg(req.getWeightKg());
         if (req.getGoal() != null) p.setGoal(req.getGoal());
 
-        // JPA сохранит сам в конце транзакции
         return toResponse(p);
     }
 
     @Transactional
-    public ProfileResponse update(String email, ProfilePatchRequest req) {
-        Profile p = getByEmail(email);
+    public ProfileResponse update(Long userId, ProfilePatchRequest req) {
+        Profile p = getOrCreate(userId);
         p.setFullName(req.getFullName());
         p.setAge(req.getAge());
         p.setGender(req.getGender());
@@ -56,8 +66,9 @@ public class ProfileService {
         return toResponse(p);
     }
 
-    public OnboardingStatusResponse getOnboardingStatus(String email) {
-        Profile p = getByEmail(email);
+    @Transactional
+    public OnboardingStatusResponse getOnboardingStatus(Long userId) {
+        Profile p = getOrCreate(userId);
 
         int filled = 0;
         if (p.getGender() != null) filled++;
@@ -75,15 +86,13 @@ public class ProfileService {
     }
 
     @Transactional
-    public void completeOnboarding(String email) {
-        Profile p = getByEmail(email);
+    public void completeOnboarding(Long userId) {
+        Profile p = getOrCreate(userId);
 
-        // обязательные шаги для твоего онбординга:
         if (p.getGender() == null || p.getWeightKg() == null || p.getAge() == null || p.getGoal() == null) {
             throw new IllegalStateException("Onboarding not finished");
         }
 
-        // базовая валидация (чтобы не мусор)
         if (p.getAge() < 5 || p.getAge() > 120) throw new IllegalStateException("Invalid age");
         if (p.getWeightKg() < 20 || p.getWeightKg() > 350) throw new IllegalStateException("Invalid weight");
 

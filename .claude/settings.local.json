@@ -12,7 +12,18 @@
       "Bash(curl -s -X POST http://localhost:8082/api/auth/register -H \"Content-Type: application/json\" -d '{\"email\":\"docker_a@test.kz\",\"password\":\"secret123\"}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
       "PowerShell(docker --version)",
       "PowerShell(docker compose *)",
-      "Bash(docker info *)"
+      "Bash(docker info *)",
+      "Bash(rm services/monolith/src/main/java/kz/nutrifit/backend/auth/controller/AuthController.java services/monolith/src/main/java/kz/nutrifit/backend/auth/service/AuthService.java services/monolith/src/main/java/kz/nutrifit/backend/auth/util/JwtUtil.java services/monolith/src/main/java/kz/nutrifit/backend/auth/dto/AuthResponse.java services/monolith/src/main/java/kz/nutrifit/backend/auth/dto/LoginRequest.java services/monolith/src/main/java/kz/nutrifit/backend/auth/dto/RegisterRequest.java services/monolith/src/main/java/kz/nutrifit/backend/config/JwtAuthenticationFilter.java services/monolith/src/main/java/kz/nutrifit/backend/config/JwtConfig.java services/monolith/src/main/java/kz/nutrifit/backend/user/UserService.java)",
+      "Bash(rmdir services/monolith/src/main/java/kz/nutrifit/backend/auth/controller services/monolith/src/main/java/kz/nutrifit/backend/auth/service services/monolith/src/main/java/kz/nutrifit/backend/auth/util services/monolith/src/main/java/kz/nutrifit/backend/auth/dto)",
+      "PowerShell(try { Invoke-WebRequest http://localhost:8081/actuator/health -TimeoutSec 3 -ErrorAction Stop } catch { $_.Exception.Message })",
+      "PowerShell(Test-NetConnection *)",
+      "PowerShell($r = Invoke-WebRequest http://localhost:8080/actuator/health -TimeoutSec 5; \"StatusCode: $\\($r.StatusCode\\); Body: $\\($r.Content\\)\")",
+      "Bash(curl *)",
+      "Bash(/c/Windows/System32/curl.exe *)",
+      "Bash(/c/Windows/System32/findstr.exe /C:\"c2@test.kz\" /C:\"Synced user\")",
+      "Bash(docker logs *)",
+      "Bash(/c/Windows/System32/findstr.exe \"Synced\" /tmp/monolith.log)",
+      "PowerShell(docker exec nutrifit-postgres *)"
     ]
   }
 }

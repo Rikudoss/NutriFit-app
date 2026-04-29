@@ -7,10 +7,10 @@
 
 ## Текущий статус
 
-**Активная фаза:** Фаза 2 — auth-service + email-верификация  
-**Активная задача:** Шаг C.2 — удалить auth-логику из монолита, читать X-User-Id из Gateway  
+**Активная фаза:** Фаза 2 закрыта (Шаг C.2 завершён) → переход на Фазу 3 (user-service)  
+**Активная задача:** 3.1 — создать `services/user-service`  
 **Последнее обновление:** 2026-04-29  
-**Сессия:** #8 (Шаг C.1 Фазы 2: Gateway маршрутизирует /api/auth/** на auth-service, валидирует JWT, пробрасывает X-User-Id; userId добавлен claim-ом в JWT; монолит синхронизирует users через Kafka consumer)
+**Сессия:** #9 (Шаг C.2 Фазы 2: удалена auth-логика из монолита, `XUserIdAuthenticationFilter` читает заголовок и кладёт `principal=Long userId` в SecurityContext; контроллеры мигрированы)
 
 ---
 
@@ -74,7 +74,7 @@
 | 2.11 | Unit тесты: AuthService, JwtUtil, EmailVerificationService | ⬜ | |
 | 2.12 | Integration тесты (Testcontainers: PostgreSQL + Redis) | ⬜ | |
 | 2.13 | Gateway: валидация JWT + проброс X-User-Id заголовка | ✅ | Шаг C.1: два роута (`/api/auth/**` → `lb://auth-service`, `/api/**` → `lb://monolith`, порядок важен — auth-service первым), `JwtAuthenticationFilter` (GlobalFilter, order=-100) валидирует подпись через общий `${JWT_SECRET}` и пробрасывает `X-User-Id` claim в downstream. Whitelist: `/api/auth/{register,login,verify,resend-code}`, `/actuator/`, `/v3/api-docs`, `/swagger-ui`. CORS preflight (OPTIONS) — без проверки. JWT: `userId` добавлен как extra claim в `JwtUtil.generateToken()` для `User instanceof UserDetails`. Монолит подписан на Kafka topic `user-events` (group `monolith-user-sync`): идемпотентный `UserEventListener` создаёт строку в `users` через native `INSERT ... ON CONFLICT DO NOTHING` + `setval` sequence (т.к. локальный `register` монолита ещё работает, удалим в C.2) |
-| 2.14 | Монолит: читать userId из X-User-Id заголовка | 🔄 | Запланировано в C.2 — фильтр X-User-Id и удаление auth-логики из монолита |
+| 2.14 | Монолит: читать userId из X-User-Id заголовка | ✅ | Шаг C.2: создан `kz.nutrifit.backend.security.XUserIdAuthenticationFilter` (`OncePerRequestFilter`) — читает `X-User-Id`, кладёт `principal=Long userId` в `SecurityContextHolder`. `SecurityConfig` упрощён: убраны `DaoAuthenticationProvider`, `AuthenticationManager`, `PasswordEncoder`, whitelist `/api/auth/**` (роутится на auth-service Gateway-ем). Удалены: `auth/controller/AuthController`, `auth/service/AuthService`, `auth/util/JwtUtil`, `auth/dto/{Auth,Login,Register}*`, `config/JwtAuthenticationFilter`, `config/JwtConfig`, `user/UserService`. Контроллеры (`Profile`, `Onboarding`, `Metrics`, `Workout`, `Nutrition`, `AI`) переключены на `Long userId = (Long) authentication.getPrincipal()`; для FK используется `userRepository.getReferenceById(userId)` (proxy без похода в БД). `ProfileService` теперь работает по `userId`, `getOrCreate` создаёт пустой профиль на лету для свежих юзеров из auth-service. `application.properties`: убран `jwt.secret=${JWT_SECRET}` |
 
 ---
 
@@ -200,6 +200,7 @@
 | 2026-04-26 | #6 | Фаза 2 Шаг A: auth-service создан, своя БД auth_db, регистрация в Eureka как AUTH-SERVICE, работает параллельно монолиту | Фаза 2 Шаг B — email-верификация (UNVERIFIED→ACTIVE, Redis, Mailtrap) |
 | 2026-04-28 | #7 | Шаг B Фазы 2: email-верификация (V2 миграция, EmailVerificationService с Redis+DB, MailService через Mailtrap SMTP, Kafka publish, rate limiting) | Шаг C — переключить Gateway на auth-service |
 | 2026-04-29 | #8 | Шаг C.1 Фазы 2: Gateway проверяет JWT и пробрасывает X-User-Id, маршрут /api/auth/** на auth-service, JWT теперь содержит userId claim, монолит синхронизирует users через Kafka consumer (idempotent native INSERT + setval) | Шаг C.2 — удалить auth из монолита, читать X-User-Id |
+| 2026-04-29 | #9 | Шаг C.2 Фазы 2: удалена auth-логика из монолита (controller/service/jwt/dto/UserService), создан `XUserIdAuthenticationFilter` (principal=Long userId), `SecurityConfig` упрощён, контроллеры переключены на `Authentication.getPrincipal()` + `userRepository.getReferenceById`, `ProfileService.getOrCreate` создаёт пустой профиль для новых юзеров из auth-service. **Фаза 2 закрыта** | Фаза 3.1 — создать `user-service` |
 
 ---
 

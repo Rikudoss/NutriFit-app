@@ -185,8 +185,12 @@ services:
       dockerfile: services/monolith/Dockerfile
     image: nutrifit-monolith:local
     container_name: nutrifit-monolith
-    ports:
-      - "8081:8081"
+    # Защита: после Шага C.2 монолит доверяет X-User-Id заголовку без JWT-валидации.
+    # Порт 8081 НЕ публикуется на host — только expose в nutrifit-network.
+    # Снаружи единственная точка входа — Gateway:8080, который и валидирует JWT.
+    # Иначе любой клиент мог бы curl-ом на localhost:8081 с кастомным X-User-Id обойти auth.
+    expose:
+      - "8081"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://nutrifit-postgres:5432/${DB_NAME:-nutrifit_ai}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}

@@ -3,10 +3,9 @@ package kz.nutrifit.backend.nutrition;
 import jakarta.validation.Valid;
 import kz.nutrifit.backend.nutrition.dto.CreateMealRequest;
 import kz.nutrifit.backend.user.User;
-import kz.nutrifit.backend.user.UserService;
+import kz.nutrifit.backend.user.UserRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,44 +15,44 @@ import java.util.List;
 public class NutritionController {
 
     private final NutritionService nutritionService;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
-    public NutritionController(NutritionService nutritionService, UserService userService) {
+    public NutritionController(NutritionService nutritionService, UserRepository userRepository) {
         this.nutritionService = nutritionService;
-        this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/meals")
-    public ResponseEntity<Meal> createMeal(@AuthenticationPrincipal UserDetails principal,
+    public ResponseEntity<Meal> createMeal(Authentication authentication,
                                            @RequestBody @Valid CreateMealRequest request) {
-        User user = userService.getByEmail(principal.getUsername());
-        return ResponseEntity.ok(nutritionService.createMeal(request, user));
+        return ResponseEntity.ok(nutritionService.createMeal(request, userRef(authentication)));
     }
 
     @GetMapping("/meals")
-    public ResponseEntity<List<Meal>> getMeals(@AuthenticationPrincipal UserDetails principal) {
-        User user = userService.getByEmail(principal.getUsername());
-        return ResponseEntity.ok(nutritionService.getMeals(user));
+    public ResponseEntity<List<Meal>> getMeals(Authentication authentication) {
+        return ResponseEntity.ok(nutritionService.getMeals(userRef(authentication)));
     }
 
     @GetMapping("/meals/{id}")
-    public ResponseEntity<Meal> getMeal(@AuthenticationPrincipal UserDetails principal, @PathVariable Long id) {
-        User user = userService.getByEmail(principal.getUsername());
-        return ResponseEntity.ok(nutritionService.getMeal(id, user));
+    public ResponseEntity<Meal> getMeal(Authentication authentication, @PathVariable Long id) {
+        return ResponseEntity.ok(nutritionService.getMeal(id, userRef(authentication)));
     }
 
     @PutMapping("/meals/{id}")
-    public ResponseEntity<Meal> updateMeal(@AuthenticationPrincipal UserDetails principal,
+    public ResponseEntity<Meal> updateMeal(Authentication authentication,
                                            @PathVariable Long id,
                                            @RequestBody @Valid CreateMealRequest request) {
-        User user = userService.getByEmail(principal.getUsername());
-        return ResponseEntity.ok(nutritionService.updateMeal(id, request, user));
+        return ResponseEntity.ok(nutritionService.updateMeal(id, request, userRef(authentication)));
     }
 
     @DeleteMapping("/meals/{id}")
-    public ResponseEntity<Void> deleteMeal(@AuthenticationPrincipal UserDetails principal, @PathVariable Long id) {
-        User user = userService.getByEmail(principal.getUsername());
-        nutritionService.deleteMeal(id, user);
+    public ResponseEntity<Void> deleteMeal(Authentication authentication, @PathVariable Long id) {
+        nutritionService.deleteMeal(id, userRef(authentication));
         return ResponseEntity.noContent().build();
+    }
+
+    private User userRef(Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        return userRepository.getReferenceById(userId);
     }
 }

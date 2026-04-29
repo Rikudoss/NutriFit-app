@@ -1,33 +1,36 @@
 package kz.nutrifit.backend.config;
 
-import kz.nutrifit.backend.user.UserService;
+import kz.nutrifit.backend.security.XUserIdAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+/**
+ * Монолит после Шага C.2: больше НЕ парсит JWT.
+ *
+ * Gateway валидирует подпись JWT и пробрасывает X-User-Id.
+ * Монолит читает заголовок через XUserIdAuthenticationFilter и доверяет ему.
+ *
+ * Поэтому здесь нет:
+ *  - DaoAuthenticationProvider / AuthenticationManager (login/register больше нет в монолите)
+ *  - PasswordEncoder (пароли живут только в auth-service)
+ *  - UserDetailsService (никто не загружает юзера по email)
+ */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final UserService userService;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final XUserIdAuthenticationFilter xUserIdAuthenticationFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
-    public SecurityConfig(UserService userService,
-                          JwtAuthenticationFilter jwtAuthenticationFilter,
+    public SecurityConfig(XUserIdAuthenticationFilter xUserIdAuthenticationFilter,
                           CorsConfigurationSource corsConfigurationSource) {
-        this.userService = userService;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.xUserIdAuthenticationFilter = xUserIdAuthenticationFilter;
         this.corsConfigurationSource = corsConfigurationSource;
     }
 
@@ -37,33 +40,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(xUserIdAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }
