@@ -21,6 +21,21 @@ spring:
   flyway:
     baseline-on-migrate: true
     baseline-version: 0
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: monolith-user-sync
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # Принимать любые пакеты при десериализации — auth-service публикует свой класс,
+        # а монолит десериализует в свой kz.nutrifit.backend.auth.event.UserRegisteredEvent
+        spring.json.trusted.packages: '*'
+        # Не использовать __TypeId__ из заголовка producer-а — он указывает на класс auth-service.
+        # Маппим всё в монолитный DTO через value.default.type ниже.
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: kz.nutrifit.backend.auth.event.UserRegisteredEvent
 
 app:
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}

@@ -8,9 +8,9 @@
 ## Текущий статус
 
 **Активная фаза:** Фаза 2 — auth-service + email-верификация  
-**Активная задача:** 2.13 — Gateway: проверка JWT (Шаг C)  
-**Последнее обновление:** 2026-04-28  
-**Сессия:** #7 (Шаг B Фазы 2: email-верификация — V2 миграция, EmailVerificationService с Redis+DB, MailService через Mailtrap SMTP, Kafka publish, rate limiting)
+**Активная задача:** Шаг C.2 — удалить auth-логику из монолита, читать X-User-Id из Gateway  
+**Последнее обновление:** 2026-04-29  
+**Сессия:** #8 (Шаг C.1 Фазы 2: Gateway маршрутизирует /api/auth/** на auth-service, валидирует JWT, пробрасывает X-User-Id; userId добавлен claim-ом в JWT; монолит синхронизирует users через Kafka consumer)
 
 ---
 
@@ -73,8 +73,8 @@
 | 2.10 | Flyway миграции для auth_db | ⬜ | |
 | 2.11 | Unit тесты: AuthService, JwtUtil, EmailVerificationService | ⬜ | |
 | 2.12 | Integration тесты (Testcontainers: PostgreSQL + Redis) | ⬜ | |
-| 2.13 | Gateway: валидация JWT + проброс X-User-Id заголовка | ⬜ | |
-| 2.14 | Монолит: читать userId из X-User-Id заголовка | ⬜ | |
+| 2.13 | Gateway: валидация JWT + проброс X-User-Id заголовка | ✅ | Шаг C.1: два роута (`/api/auth/**` → `lb://auth-service`, `/api/**` → `lb://monolith`, порядок важен — auth-service первым), `JwtAuthenticationFilter` (GlobalFilter, order=-100) валидирует подпись через общий `${JWT_SECRET}` и пробрасывает `X-User-Id` claim в downstream. Whitelist: `/api/auth/{register,login,verify,resend-code}`, `/actuator/`, `/v3/api-docs`, `/swagger-ui`. CORS preflight (OPTIONS) — без проверки. JWT: `userId` добавлен как extra claim в `JwtUtil.generateToken()` для `User instanceof UserDetails`. Монолит подписан на Kafka topic `user-events` (group `monolith-user-sync`): идемпотентный `UserEventListener` создаёт строку в `users` через native `INSERT ... ON CONFLICT DO NOTHING` + `setval` sequence (т.к. локальный `register` монолита ещё работает, удалим в C.2) |
+| 2.14 | Монолит: читать userId из X-User-Id заголовка | 🔄 | Запланировано в C.2 — фильтр X-User-Id и удаление auth-логики из монолита |
 
 ---
 
@@ -199,6 +199,7 @@
 | 2026-04-26 | #5 | Фаза 1 закрыта (1.7, 1.8): Eureka client везде, lb://monolith, полный docker-compose стек 10/10 healthy | Фаза 2.1 — создать auth-service |
 | 2026-04-26 | #6 | Фаза 2 Шаг A: auth-service создан, своя БД auth_db, регистрация в Eureka как AUTH-SERVICE, работает параллельно монолиту | Фаза 2 Шаг B — email-верификация (UNVERIFIED→ACTIVE, Redis, Mailtrap) |
 | 2026-04-28 | #7 | Шаг B Фазы 2: email-верификация (V2 миграция, EmailVerificationService с Redis+DB, MailService через Mailtrap SMTP, Kafka publish, rate limiting) | Шаг C — переключить Gateway на auth-service |
+| 2026-04-29 | #8 | Шаг C.1 Фазы 2: Gateway проверяет JWT и пробрасывает X-User-Id, маршрут /api/auth/** на auth-service, JWT теперь содержит userId claim, монолит синхронизирует users через Kafka consumer (idempotent native INSERT + setval) | Шаг C.2 — удалить auth из монолита, читать X-User-Id |
 
 ---
 
@@ -222,3 +223,6 @@
 | TD-7 | Смешивание `LocalDateTime` (EmailVerification) и `Instant` (User) в auth-service | Унифицировать на `Instant` — полей `expiresAt`, `createdAt`, `usedAt` в `EmailVerification`, плюс `LocalDateTime.now()` в `EmailVerificationService`. Сейчас работает (Hibernate маппит обоих в `TIMESTAMP`), но даёт несогласованность по timezone-семантике |
 | TD-8 | Race condition в `EmailVerificationService.verifyCode`: read из Redis + delete — две операции | Использовать `redisTemplate.opsForValue().getAndDelete(key)` (атомарно). Сейчас при одновременном `verify` от двух воркеров теоретически оба могут увидеть код «успешным» до удаления. Для нагруженного прод-сценария — починить |
 | ~~TD-9~~ | ~~`attempts` в `email_verifications` НЕ инкрементируется при неверном коде~~ | **Закрыт в сессии #7.** Создан отдельный `@Service AttemptsTracker.increment()` с `@Transactional(propagation = REQUIRES_NEW)` — инкремент коммитится независимо от внешней транзакции `verifyEmail`. Заодно закрыт связанный баг: после исчерпания 5 попыток ключ удалялся из Redis, но в БД `expires_at` в будущем — fallback позволял пройти 6-ю попытку с правильным кодом. Добавлена проверка `active.getAttempts() >= MAX_ATTEMPTS` в DB-пути ДО сравнения кода. Подтверждено e2e: 5 неверных → attempts=5 + Redis удалён; 6-я с правильным кодом → 400, юзер остался UNVERIFIED |
+| TD-10 | Whitelist в Gateway `JwtAuthenticationFilter` использует `startsWith("/actuator/")` — слишком широко, в идеале точечный whitelist `/actuator/health` и `/actuator/info` | Сейчас наружу через Gateway открыты все actuator-эндпоинты сервисов за `lb://`, включая потенциально чувствительные `env`, `configprops`, `mappings`. Сузить prefix-список до `/actuator/health`, `/actuator/info`. На auth-service и монолите остальные actuator-эндпоинты в exposure уже не выставлены (`management.endpoints.web.exposure.include`), но defense-in-depth на Gateway не помешает |
+| TD-11 | Gateway warmup задержка ~30 сек после рестарта (Eureka client registry-fetch-interval) | При рестарте Gateway первые 30 сек возвращает 503 на `lb://` — Eureka client ещё не получил registry. Не баг, дизайн Eureka. Можно сократить через `eureka.client.registry-fetch-interval-seconds=5` или добавить retry в Gateway. Не критично для dev, но для production — починить (ускорить fetch-interval либо явный warmup health probe) |
+| TD-12 | Монолитный `GlobalExceptionHandler` мапит `NotFoundException` / `IllegalArgumentException` на 400 — семантически "Profile not found" должен быть 404 | Подтверждено в e2e сессии #8: `GET /api/profile` с валидным JWT для юзера без профиля возвращает 400 `"Profile not found for user: ..."`. Создать `ProfileNotFoundException` с `@ResponseStatus(NOT_FOUND)` либо в `GlobalExceptionHandler` различать "not found"-типы и возвращать 404. Затрагивает все домены монолита (profile, meal, workout, metric) — единый паттерн |

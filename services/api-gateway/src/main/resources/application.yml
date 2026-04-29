@@ -19,11 +19,20 @@ spring:
                 allowCredentials: true
 
           routes:
-            # Весь /api/** → монолит, найденный через Eureka (lb:// = client-side load balancing)
+            # ВАЖНО: порядок имеет значение — auth-service первым (более специфичный путь),
+            # иначе /api/** перехватит /api/auth/** до того, как сработает первый предикат.
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
             - id: monolith
               uri: lb://monolith
               predicates:
                 - Path=/api/**
+
+jwt:
+  # Общий секрет с auth-service и монолитом — Gateway валидирует JWT локально (без вызова auth-service).
+  secret: ${JWT_SECRET}
 
 eureka:
   client:

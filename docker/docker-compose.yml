@@ -197,12 +197,15 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      KAFKA_BOOTSTRAP: nutrifit-kafka:29092
     depends_on:
       nutrifit-postgres:
         condition: service_healthy
       nutrifit-config-server:
         condition: service_healthy
       nutrifit-discovery-server:
+        condition: service_healthy
+      nutrifit-kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8081/actuator/health || exit 1"]
@@ -279,10 +282,14 @@ services:
       EUREKA_SERVER_URL: http://nutrifit-discovery-server:8761/eureka/
       EUREKA_INSTANCE_HOSTNAME: nutrifit-api-gateway
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      # Общий JWT_SECRET с auth-service и монолитом — Gateway валидирует подпись локально
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       nutrifit-discovery-server:
         condition: service_healthy
       nutrifit-monolith:
+        condition: service_healthy
+      nutrifit-auth-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]

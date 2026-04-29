@@ -11,7 +11,8 @@
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); apps=d.get\\('applications',{}\\).get\\('application',[]\\); print\\('Registered services:'\\); [print\\(' -', a['name'], '@', [i.get\\('ipAddr'\\)+':'+str\\(i['port']['\\\\$']\\) for i in \\(a['instance'] if isinstance\\(a['instance'],list\\) else [a['instance']]\\)]\\) for a in apps]\")",
       "Bash(curl -s -X POST http://localhost:8082/api/auth/register -H \"Content-Type: application/json\" -d '{\"email\":\"docker_a@test.kz\",\"password\":\"secret123\"}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
       "PowerShell(docker --version)",
-      "PowerShell(docker compose *)"
+      "PowerShell(docker compose *)",
+      "Bash(docker info *)"
     ]
   }
 }
