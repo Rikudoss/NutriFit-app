@@ -2,13 +2,13 @@ package kz.nutrifit.backend.ai;
 
 import kz.nutrifit.backend.ai.dto.AIRequest;
 import kz.nutrifit.backend.ai.dto.AIResponse;
+import kz.nutrifit.backend.client.ProfileSummary;
+import kz.nutrifit.backend.client.UserServiceClient;
 import kz.nutrifit.backend.metrics.HealthMetric;
 import kz.nutrifit.backend.metrics.MetricsRepository;
 import kz.nutrifit.backend.nutrition.Meal;
 import kz.nutrifit.backend.nutrition.MealItem;
 import kz.nutrifit.backend.nutrition.repository.MealRepository;
-import kz.nutrifit.backend.profile.Profile;
-import kz.nutrifit.backend.profile.ProfileRepository;
 import kz.nutrifit.backend.user.User;
 import kz.nutrifit.backend.workout.Workout;
 import kz.nutrifit.backend.workout.WorkoutRepository;
@@ -24,18 +24,18 @@ import java.util.stream.Collectors;
 public class AIService {
 
     private final RestTemplate restTemplate;
-    private final ProfileRepository profileRepository;
+    private final UserServiceClient userServiceClient;
     private final MealRepository mealRepository;
     private final WorkoutRepository workoutRepository;
     private final MetricsRepository metricsRepository;
 
     public AIService(RestTemplate openAiRestTemplate,
-                     ProfileRepository profileRepository,
+                     UserServiceClient userServiceClient,
                      MealRepository mealRepository,
                      WorkoutRepository workoutRepository,
                      MetricsRepository metricsRepository) {
         this.restTemplate = openAiRestTemplate;
-        this.profileRepository = profileRepository;
+        this.userServiceClient = userServiceClient;
         this.mealRepository = mealRepository;
         this.workoutRepository = workoutRepository;
         this.metricsRepository = metricsRepository;
@@ -45,7 +45,7 @@ public class AIService {
         StringBuilder builder = new StringBuilder();
         builder.append("You are a digital fitness and nutrition coach. Provide concise personalized recommendations.\n");
 
-        Profile profile = profileRepository.findByUser(user).orElse(null);
+        ProfileSummary profile = userServiceClient.getProfile(user.getId());
         if (profile != null) {
             builder.append("Profile: name=").append(profile.getFullName())
                     .append(", age=").append(profile.getAge())

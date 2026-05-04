@@ -1,4 +1,4 @@
-package kz.nutrifit.backend.onboarding.dto;
+package kz.nutrifit.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

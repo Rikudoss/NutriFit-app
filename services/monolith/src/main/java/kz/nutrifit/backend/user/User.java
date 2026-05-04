@@ -2,7 +2,6 @@ package kz.nutrifit.backend.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import kz.nutrifit.backend.profile.Profile;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,10 +34,6 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String role = "USER";
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Profile profile;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

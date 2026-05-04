@@ -1,8 +1,10 @@
-package kz.nutrifit.backend.profile;
+package kz.nutrifit.user.service;
 
-import kz.nutrifit.backend.onboarding.dto.OnboardingStatusResponse;
-import kz.nutrifit.backend.user.User;
-import kz.nutrifit.backend.user.UserRepository;
+import kz.nutrifit.user.dto.OnboardingStatusResponse;
+import kz.nutrifit.user.dto.ProfilePatchRequest;
+import kz.nutrifit.user.dto.ProfileResponse;
+import kz.nutrifit.user.entity.Profile;
+import kz.nutrifit.user.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,17 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileService {
 
     private final ProfileRepository profileRepository;
-    private final UserRepository userRepository;
 
-    /**
-     * Lazy-create: после удаления локального register в C.2 свежие юзеры приходят из auth-service
-     * через Kafka и в монолите профиль ещё не существует. Создаём пустой при первом обращении.
-     */
     @Transactional
     public Profile getOrCreate(Long userId) {
-        return profileRepository.findByUser_Id(userId).orElseGet(() -> {
-            User userRef = userRepository.getReferenceById(userId);
-            Profile profile = Profile.builder().user(userRef).build();
+        return profileRepository.findByUserId(userId).orElseGet(() -> {
+            Profile profile = Profile.builder().userId(userId).build();
             return profileRepository.save(profile);
         });
     }
@@ -30,12 +26,14 @@ public class ProfileService {
     public ProfileResponse toResponse(Profile p) {
         return new ProfileResponse(
                 p.getId(),
+                p.getUserId(),
                 p.getFullName(),
                 p.getAge(),
                 p.getGender(),
                 p.getHeightCm(),
                 p.getWeightKg(),
                 p.getGoal(),
+                p.getActivityLevel(),
                 p.isOnboardingCompleted()
         );
     }
@@ -43,14 +41,13 @@ public class ProfileService {
     @Transactional
     public ProfileResponse patch(Long userId, ProfilePatchRequest req) {
         Profile p = getOrCreate(userId);
-
         if (req.getFullName() != null) p.setFullName(req.getFullName());
         if (req.getGender() != null) p.setGender(req.getGender());
         if (req.getAge() != null) p.setAge(req.getAge());
         if (req.getHeightCm() != null) p.setHeightCm(req.getHeightCm());
         if (req.getWeightKg() != null) p.setWeightKg(req.getWeightKg());
         if (req.getGoal() != null) p.setGoal(req.getGoal());
-
+        if (req.getActivityLevel() != null) p.setActivityLevel(req.getActivityLevel());
         return toResponse(p);
     }
 
@@ -63,13 +60,13 @@ public class ProfileService {
         p.setHeightCm(req.getHeightCm());
         p.setWeightKg(req.getWeightKg());
         p.setGoal(req.getGoal());
+        p.setActivityLevel(req.getActivityLevel());
         return toResponse(p);
     }
 
     @Transactional
     public OnboardingStatusResponse getOnboardingStatus(Long userId) {
         Profile p = getOrCreate(userId);
-
         int filled = 0;
         if (p.getGender() != null) filled++;
         if (p.getWeightKg() != null) filled++;
@@ -88,14 +85,11 @@ public class ProfileService {
     @Transactional
     public void completeOnboarding(Long userId) {
         Profile p = getOrCreate(userId);
-
         if (p.getGender() == null || p.getWeightKg() == null || p.getAge() == null || p.getGoal() == null) {
             throw new IllegalStateException("Onboarding not finished");
         }
-
         if (p.getAge() < 5 || p.getAge() > 120) throw new IllegalStateException("Invalid age");
         if (p.getWeightKg() < 20 || p.getWeightKg() > 350) throw new IllegalStateException("Invalid weight");
-
         p.setOnboardingCompleted(true);
     }
 }

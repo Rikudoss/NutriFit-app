@@ -19,12 +19,20 @@ spring:
                 allowCredentials: true
 
           routes:
-            # ВАЖНО: порядок имеет значение — auth-service первым (более специфичный путь),
-            # иначе /api/** перехватит /api/auth/** до того, как сработает первый предикат.
+            # ВАЖНО: порядок имеет значение — специфичные пути идут выше,
+            # иначе /api/** перехватит их до того, как сработает нужный предикат.
             - id: auth-service
               uri: lb://auth-service
               predicates:
                 - Path=/api/auth/**
+            - id: user-service-profile
+              uri: lb://user-service
+              predicates:
+                - Path=/api/profile/**
+            - id: user-service-onboarding
+              uri: lb://user-service
+              predicates:
+                - Path=/api/onboarding/**
             - id: monolith
               uri: lb://monolith
               predicates:

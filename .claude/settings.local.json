@@ -23,7 +23,12 @@
       "Bash(/c/Windows/System32/findstr.exe /C:\"c2@test.kz\" /C:\"Synced user\")",
       "Bash(docker logs *)",
       "Bash(/c/Windows/System32/findstr.exe \"Synced\" /tmp/monolith.log)",
-      "PowerShell(docker exec nutrifit-postgres *)"
+      "PowerShell(docker exec nutrifit-postgres *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(psql *)",
+      "Bash(redis-cli -h localhost -p 6379 GET \"verification:user:1\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -)"
     ]
   }
 }

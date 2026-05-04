@@ -271,6 +271,46 @@ services:
       - nutrifit-network
 
   # ──────────────────────────────────────────
+  # User Service (Фаза 3)
+  # Своя БД user_db. Профиль, онбординг.
+  # Порт не публикуется — только внутри nutrifit-network.
+  # ──────────────────────────────────────────
+  nutrifit-user-service:
+    build:
+      context: ../
+      dockerfile: services/user-service/Dockerfile
+    image: nutrifit-user-service:local
+    container_name: nutrifit-user-service
+    expose:
+      - "8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://nutrifit-postgres:5432/user_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      CONFIG_SERVER_URL: http://nutrifit-config-server:8888
+      EUREKA_SERVER_URL: http://nutrifit-discovery-server:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: nutrifit-user-service
+      KAFKA_BOOTSTRAP: nutrifit-kafka:29092
+    depends_on:
+      nutrifit-postgres:
+        condition: service_healthy
+      nutrifit-config-server:
+        condition: service_healthy
+      nutrifit-discovery-server:
+        condition: service_healthy
+      nutrifit-kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - nutrifit-network
+
+  # ──────────────────────────────────────────
   # API Gateway (Spring Cloud Gateway)
   # Проксирует /api/** → lb://monolith через Eureka
   # ──────────────────────────────────────────
@@ -294,6 +334,8 @@ services:
       nutrifit-monolith:
         condition: service_healthy
       nutrifit-auth-service:
+        condition: service_healthy
+      nutrifit-user-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]

@@ -7,10 +7,10 @@
 
 ## Текущий статус
 
-**Активная фаза:** Фаза 2 закрыта (Шаг C.2 завершён) → переход на Фазу 3 (user-service)  
-**Активная задача:** 3.1 — создать `services/user-service`  
-**Последнее обновление:** 2026-04-29  
-**Сессия:** #9 (Шаг C.2 Фазы 2: удалена auth-логика из монолита, `XUserIdAuthenticationFilter` читает заголовок и кладёт `principal=Long userId` в SecurityContext; контроллеры мигрированы)
+**Активная фаза:** Фаза 3 завершена → переход на Фазу 4 (nutrition-service)  
+**Активная задача:** 4.1 — создать `services/nutrition-service`  
+**Последнее обновление:** 2026-05-04  
+**Сессия:** #10 (Фаза 3: создан `user-service` (порт 8083, БД `user_db`), Profile entity с `userId` Long (без FK на User), ActivityLevel enum, Kafka consumer `user.registered` → getOrCreate профиль, `/internal/users/{userId}`, Gateway роуты `/api/profile/**` и `/api/onboarding/**` → `lb://user-service`. Монолит: удалены `profile/*` и `onboarding/*` пакеты, добавлен `UserServiceClient` с `@LoadBalanced RestTemplate` для HTTP-вызова user-service, `AIService` мигрирован на HTTP-клиент. Оба модуля компилируются.)
 
 ---
 
@@ -82,16 +82,16 @@
 
 | # | Задача | Статус | Заметки |
 |---|---|---|---|
-| 3.1 | Создать user-service | ⬜ | |
-| 3.2 | Перенести Profile entity + ProfileRepository | ⬜ | |
-| 3.3 | Перенести ProfileService + ProfileController | ⬜ | |
-| 3.4 | Перенести OnboardingController | ⬜ | |
-| 3.5 | Добавить поле `activity_level` в профиль | ⬜ | |
-| 3.6 | Kafka Consumer: `user.registered` → создать профиль | ⬜ | |
-| 3.7 | Internal endpoint `/internal/users/{userId}` | ⬜ | |
-| 3.8 | Flyway миграции для user_db | ⬜ | |
+| 3.1 | Создать user-service | ✅ | `services/user-service/`, порт 8083, БД `user_db`, Eureka как USER-SERVICE, Dockerfile, pom.xml |
+| 3.2 | Перенести Profile entity + ProfileRepository | ✅ | `kz.nutrifit.user.entity.Profile` — `userId Long` вместо FK на User entity; `ProfileRepository.findByUserId()` |
+| 3.3 | Перенести ProfileService + ProfileController | ✅ | Логика getOrCreate/patch/update перенесена; контроллер `/api/profile` читает X-User-Id через SecurityContext |
+| 3.4 | Перенести OnboardingController | ✅ | `/api/onboarding` и `/api/onboarding/complete` — делегируют в ProfileService |
+| 3.5 | Добавить поле `activity_level` в профиль | ✅ | Enum `ActivityLevel` (SEDENTARY..EXTRA_ACTIVE), поле в Profile entity и V1 миграции |
+| 3.6 | Kafka Consumer: `user.registered` → создать профиль | ✅ | `UserEventConsumer` (group `user-service`), String deserializer + ObjectMapper, вызывает `getOrCreate` |
+| 3.7 | Internal endpoint `/internal/users/{userId}` | ✅ | `InternalUserController` → `GET /internal/users/{userId}`, permitAll в SecurityConfig |
+| 3.8 | Flyway миграции для user_db | ✅ | `V1__init_user_schema.sql`: таблица profiles + индекс по user_id; `user_db` создаётся init-скриптом postgres |
 | 3.9 | Тесты | ⬜ | |
-| 3.10 | Удалить profile-код из монолита | ⬜ | |
+| 3.10 | Удалить profile-код из монолита | ✅ | Удалены `profile/*` и `onboarding/*` пакеты; `User.java` очищен от @OneToOne Profile; `AIService` → `UserServiceClient` с `@LoadBalanced RestTemplate`; `InternalServiceConfig` + `ProfileSummary` в монолите |
 
 ---
 
