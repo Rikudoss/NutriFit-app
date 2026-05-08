@@ -10,6 +10,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE auth_db TO $POSTGRES_USER;
     CREATE DATABASE user_db;
     GRANT ALL PRIVILEGES ON DATABASE user_db TO $POSTGRES_USER;
+    CREATE DATABASE nutrition_db;
+    GRANT ALL PRIVILEGES ON DATABASE nutrition_db TO $POSTGRES_USER;
 EOSQL
 
-echo "[init] auth_db and user_db created and granted to $POSTGRES_USER"
+echo "[init] auth_db, user_db and nutrition_db created and granted to $POSTGRES_USER"

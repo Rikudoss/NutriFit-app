@@ -7,10 +7,10 @@
 
 ## Текущий статус
 
-**Активная фаза:** Фаза 3 завершена → переход на Фазу 4 (nutrition-service)  
-**Активная задача:** 4.1 — создать `services/nutrition-service`  
-**Последнее обновление:** 2026-05-04  
-**Сессия:** #10 (Фаза 3: создан `user-service` (порт 8083, БД `user_db`), Profile entity с `userId` Long (без FK на User), ActivityLevel enum, Kafka consumer `user.registered` → getOrCreate профиль, `/internal/users/{userId}`, Gateway роуты `/api/profile/**` и `/api/onboarding/**` → `lb://user-service`. Монолит: удалены `profile/*` и `onboarding/*` пакеты, добавлен `UserServiceClient` с `@LoadBalanced RestTemplate` для HTTP-вызова user-service, `AIService` мигрирован на HTTP-клиент. Оба модуля компилируются.)
+**Активная фаза:** Фаза 4 (Шаг A завершён)  
+**Активная задача:** 4.2 — тестирование nutrition-service  
+**Последнее обновление:** 2026-05-05  
+**Сессия:** #11 (Шаг A Фазы 4: создан `nutrition-service` (порт 8084, БД `nutrition_db`). Entities: `Meal` (userId Long, mealType enum, total_protein/carbs/fat), `MealItem` (@ManyToOne Meal — intra-service FK), `NutritionGoal` (userId Long, UNIQUE). Kafka consumer-skeleton `user-events` (group `nutrition-service`). `XUserIdAuthenticationFilter` + `SecurityConfig` скопированы из user-service. V1 миграция: таблицы meals, meal_items, nutrition_goals. Новые endpoints: GET/PUT `/api/nutrition/goals`, GET `/api/nutrition/summary?date=`. Gateway роут `/api/nutrition/**` → `lb://nutrition-service` добавлен перед монолитом. Код монолита не тронут (nutrition остаётся в монолите до Шага B).)
 
 ---
 

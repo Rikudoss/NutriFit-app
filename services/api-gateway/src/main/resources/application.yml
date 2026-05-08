@@ -33,6 +33,10 @@ spring:
               uri: lb://user-service
               predicates:
                 - Path=/api/onboarding/**
+            - id: nutrition-service
+              uri: lb://nutrition-service
+              predicates:
+                - Path=/api/nutrition/**
             - id: monolith
               uri: lb://monolith
               predicates:

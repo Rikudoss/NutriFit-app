@@ -28,7 +28,30 @@
       "Bash(psql *)",
       "Bash(redis-cli -h localhost -p 6379 GET \"verification:user:1\")",
       "Bash(python3 -c ' *)",
-      "Bash(python3 -)"
+      "Bash(python3 -)",
+      "Bash(./mvnw compile *)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(export JAVA_HOME=\"/mnt/c/Program Files/Java/jdk-21\")",
+      "Bash(\"/mnt/c/Program Files/Java/jdk-21/bin/java.exe\" -version)",
+      "Bash(mvn.cmd -version)",
+      "Bash(java -version)",
+      "Bash(mkdir -p /tmp/java-bin)",
+      "Bash(ln -sf \"/mnt/c/Program Files/Java/jdk-21/bin/java.exe\" /tmp/java-bin/java)",
+      "Bash(export PATH=\"/tmp/java-bin:$PATH\")",
+      "Bash(ln -sfn \"/mnt/c/Program Files/Java/jdk-21\" /tmp/jdk21)",
+      "Bash(mkdir -p /tmp/jdk21/bin)",
+      "Bash(ln -sf \"/mnt/c/Program Files/Java/jdk-21/bin/java.exe\" /tmp/jdk21/bin/java)",
+      "Bash(mkdir -p /tmp/jdk-wrap/bin)",
+      "Bash(printf '#!/bin/sh\\\\nexec \"/mnt/c/Program Files/Java/jdk-21/bin/java.exe\" \"$@\"\\\\n')",
+      "Bash(chmod +x /tmp/jdk-wrap/bin/java)",
+      "Bash(apt-get --version)",
+      "Bash(sudo apt-get install -y openjdk-21-jdk-headless -q)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(JAVA_HOME=/tmp/jdk-wrap /home/yerkin/.m2/wrapper/dists/apache-maven-3.9.11/a2d47e15/bin/mvn compile -pl services/nutrition-service -am -q)",
+      "Bash(docker exec nutrifit-postgres *)",
+      "Bash(docker exec *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(s['name']\\) for s in d['propertySources']]\")",
+      "Bash(wait)"
     ]
   }
 }
