@@ -51,7 +51,23 @@
       "Bash(docker exec nutrifit-postgres *)",
       "Bash(docker exec *)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(s['name']\\) for s in d['propertySources']]\")",
-      "Bash(wait)"
+      "Bash(wait)",
+      "Bash(export JAVA_HOME=\"/mnt/c/Program Files/Eclipse Adoptium/jdk-21\")",
+      "Bash(/mnt/c/Program Files/Eclipse Adoptium/jdk-21/bin/java *)",
+      "Read(//mnt/c/Program Files/Common Files/Oracle/Java/javapath_target_28645437/**)",
+      "Bash(\"/mnt/c/Program Files/Common Files/Oracle/Java/javapath/java\" -version)",
+      "Bash(java.exe -version)",
+      "Bash(java.exe -XshowSettings:all -version)",
+      "Bash(JAVA_HOME=\"C:\\\\\\\\Program Files\\\\\\\\Java\\\\\\\\jdk-23\" ./mvnw compile -pl services/monolith -am)",
+      "Bash(JAVA_HOME=\"C:\\\\\\\\Program Files\\\\\\\\Java\\\\\\\\jdk-23\" ./mvnw compile -pl services/nutrition-service -am)",
+      "Bash(JAVA_HOME=\"/mnt/c/Program Files/Java/jdk-23\" ./mvnw compile -pl services/monolith -am)",
+      "Bash(mkdir -p /tmp/java-wrapper/bin)",
+      "Bash(ln -sf \"/mnt/c/Program Files/Java/jdk-23/bin/java.exe\" /tmp/java-wrapper/bin/java)",
+      "Bash(chmod +x /tmp/java-wrapper/bin/java)",
+      "Bash(JAVA_HOME=/tmp/java-wrapper ./mvnw compile -pl services/monolith -am)",
+      "Read(//mnt/c/ProgramData/chocolatey/bin/**)",
+      "Read(//mnt/d/**)",
+      "Bash(xargs cat)"
     ]
   }
 }

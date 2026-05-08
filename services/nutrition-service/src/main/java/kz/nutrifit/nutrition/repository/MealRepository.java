@@ -17,4 +17,7 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
     Optional<Meal> findByIdAndUserId(Long id, Long userId);
 
     List<Meal> findAllByUserIdAndMealDateBetween(Long userId, LocalDateTime start, LocalDateTime end);
+
+    @EntityGraph(attributePaths = "items")
+    List<Meal> findTop50ByUserIdOrderByMealDateDesc(Long userId);
 }

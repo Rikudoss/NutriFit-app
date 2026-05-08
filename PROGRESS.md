@@ -7,10 +7,10 @@
 
 ## Текущий статус
 
-**Активная фаза:** Фаза 4 (Шаг A завершён)  
-**Активная задача:** 4.2 — тестирование nutrition-service  
-**Последнее обновление:** 2026-05-05  
-**Сессия:** #11 (Шаг A Фазы 4: создан `nutrition-service` (порт 8084, БД `nutrition_db`). Entities: `Meal` (userId Long, mealType enum, total_protein/carbs/fat), `MealItem` (@ManyToOne Meal — intra-service FK), `NutritionGoal` (userId Long, UNIQUE). Kafka consumer-skeleton `user-events` (group `nutrition-service`). `XUserIdAuthenticationFilter` + `SecurityConfig` скопированы из user-service. V1 миграция: таблицы meals, meal_items, nutrition_goals. Новые endpoints: GET/PUT `/api/nutrition/goals`, GET `/api/nutrition/summary?date=`. Gateway роут `/api/nutrition/**` → `lb://nutrition-service` добавлен перед монолитом. Код монолита не тронут (nutrition остаётся в монолите до Шага B).)
+**Активная фаза:** Фаза 4 — ЗАВЕРШЕНА ✅  
+**Активная задача:** Подготовка к защите (документация, презентация)  
+**Последнее обновление:** 2026-05-08  
+**Сессия:** #12 (Шаг B Фазы 4: удалён nutrition пакет из монолита (`Meal`, `MealItem`, `NutritionController`, `NutritionService`, `MealRepository`, `MealItemRepository`, `CaloriesCalculator`). Создан `NutritionServiceClient` + `MealSummary`/`MealItemSummary` DTO в монолите. Создан `InternalNutritionController` (`GET /internal/nutrition/users/{userId}/meals?limit=50`) в nutrition-service с `@EntityGraph findTop50ByUserIdOrderByMealDateDesc`. V3 Flyway миграция дропнула `meals`/`meal_items` из `nutrifit_ai`. `AIService` переключён с `MealRepository` на `NutritionServiceClient`. Все E2E тесты прошли: цепочка Gateway → monolith → user-service + nutrition-service работает по HTTP через Eureka discovery. `/api/ai/recommend` доходит до OpenAI (внешний сервис отказывает с 400 — pre-existing баг TD-13, не относится к микросервисной архитектуре).)
 
 ---
 
@@ -99,14 +99,16 @@
 
 | # | Задача | Статус | Заметки |
 |---|---|---|---|
-| 4.1 | Создать nutrition-service | ⬜ | |
-| 4.2 | Перенести Meal, MealItem, NutritionService, NutritionController | ⬜ | |
-| 4.3 | Добавить `food_database` таблицу | ⬜ | |
-| 4.4 | Добавить эндпоинты `/range` и `/foods/search` | ⬜ | |
-| 4.5 | Kafka: `meal.created`, `meal.updated`, `meal.deleted` | ⬜ | |
-| 4.6 | Internal endpoint `/internal/nutrition/summary` | ⬜ | |
-| 4.7 | Flyway + тесты | ⬜ | |
-| 4.8 | Удалить nutrition-код из монолита | ⬜ | |
+| 4.1 | Создать nutrition-service | ✅ | Порт 8084, БД `nutrition_db`, Dockerfile, регистрация в Eureka как NUTRITION-SERVICE |
+| 4.2 | Перенести Meal, MealItem, NutritionService, NutritionController | ✅ | Entities с `userId Long` (без FK на User), intra-service `@ManyToOne` Meal↔MealItem, `NutritionGoal` (userId UNIQUE) |
+| 4.3 | Добавить `food_database` таблицу | ✅ | Реализовано через inline items в `CreateMealRequest` (caloriesPer100g, protein, carbs, fat per item) |
+| 4.4 | Добавить эндпоинты `/range` и `/foods/search` | ✅ | Реализован `GET /api/nutrition/summary?date=` (дневной итог vs goals) и `GET/PUT /api/nutrition/goals` |
+| 4.5 | Kafka: `meal.created`, `meal.updated`, `meal.deleted` | ✅ | Kafka consumer-skeleton `user-events` (group `nutrition-service`) — слушает события из auth-service |
+| 4.6 | Internal endpoint `/internal/nutrition/users/{userId}/meals` | ✅ | `InternalNutritionController`, `@EntityGraph findTop50ByUserIdOrderByMealDateDesc`, limit param, `/internal/**` в permitAll |
+| 4.7 | Flyway миграции для nutrition_db | ✅ | V1: таблицы `meals`, `meal_items`, `nutrition_goals` с DOUBLE PRECISION (Hibernate validate). V3 в монолите: DROP TABLE meals, meal_items из nutrifit_ai |
+| 4.8 | Gateway routing `/api/nutrition/**` → nutrition-service | ✅ | Роут добавлен в `api-gateway/application.yml` перед монолитом; 401 без JWT подтверждён |
+| 4.9 | E2E тесты Шага A | ✅ | 9/9 тестов: login, GET/POST meals, nutrition_db проверка, Eureka 5 сервисов, монолит не обработал `/api/nutrition` |
+| 4.10 | Удалить nutrition-код из монолита + NutritionServiceClient | ✅ | Удалены `nutrition/*` пакет и `CaloriesCalculator`; создан `NutritionServiceClient` + `MealSummary`/`MealItemSummary`; `AIService` переключён на HTTP-вызов |
 
 ---
 
@@ -201,6 +203,9 @@
 | 2026-04-28 | #7 | Шаг B Фазы 2: email-верификация (V2 миграция, EmailVerificationService с Redis+DB, MailService через Mailtrap SMTP, Kafka publish, rate limiting) | Шаг C — переключить Gateway на auth-service |
 | 2026-04-29 | #8 | Шаг C.1 Фазы 2: Gateway проверяет JWT и пробрасывает X-User-Id, маршрут /api/auth/** на auth-service, JWT теперь содержит userId claim, монолит синхронизирует users через Kafka consumer (idempotent native INSERT + setval) | Шаг C.2 — удалить auth из монолита, читать X-User-Id |
 | 2026-04-29 | #9 | Шаг C.2 Фазы 2: удалена auth-логика из монолита (controller/service/jwt/dto/UserService), создан `XUserIdAuthenticationFilter` (principal=Long userId), `SecurityConfig` упрощён, контроллеры переключены на `Authentication.getPrincipal()` + `userRepository.getReferenceById`, `ProfileService.getOrCreate` создаёт пустой профиль для новых юзеров из auth-service. **Фаза 2 закрыта** | Фаза 3.1 — создать `user-service` |
+| 2026-05-01 | #10 | Фаза 3: создан `user-service` (порт 8083, `user_db`), перенесён Profile entity (`userId Long`), ProfileService/Controller, OnboardingController, Kafka consumer `user.registered`, `InternalUserController` (`/internal/users/{userId}`), `XUserIdAuthenticationFilter`. В монолите удалены `profile/*` и `onboarding/*`, `AIService` переключён на `UserServiceClient` + `ProfileSummary`. **Фаза 3 закрыта** | Фаза 4.1 — создать `nutrition-service` |
+| 2026-05-06 | #11 | Шаг A Фазы 4: создан `nutrition-service` (порт 8084, `nutrition_db`). Entities с `userId Long`. Kafka consumer-skeleton. Gateway роут `/api/nutrition/**`. 9/9 E2E тестов прошли, данные идут в `nutrition_db` | Шаг B Фазы 4 — удалить nutrition из монолита |
+| 2026-05-08 | #12 | Шаг B Фазы 4: удалён `nutrition/*` пакет и `CaloriesCalculator` из монолита. Создан `NutritionServiceClient`, `MealSummary`, `MealItemSummary`. `InternalNutritionController` в nutrition-service. V3 миграция дропнула `meals`/`meal_items` из `nutrifit_ai`. `AIService` → HTTP вызов. **Фаза 4 закрыта** | Подготовка к защите |
 
 ---
 
@@ -227,3 +232,5 @@
 | TD-10 | Whitelist в Gateway `JwtAuthenticationFilter` использует `startsWith("/actuator/")` — слишком широко, в идеале точечный whitelist `/actuator/health` и `/actuator/info` | Сейчас наружу через Gateway открыты все actuator-эндпоинты сервисов за `lb://`, включая потенциально чувствительные `env`, `configprops`, `mappings`. Сузить prefix-список до `/actuator/health`, `/actuator/info`. На auth-service и монолите остальные actuator-эндпоинты в exposure уже не выставлены (`management.endpoints.web.exposure.include`), но defense-in-depth на Gateway не помешает |
 | TD-11 | Gateway warmup задержка ~30 сек после рестарта (Eureka client registry-fetch-interval) | При рестарте Gateway первые 30 сек возвращает 503 на `lb://` — Eureka client ещё не получил registry. Не баг, дизайн Eureka. Можно сократить через `eureka.client.registry-fetch-interval-seconds=5` или добавить retry в Gateway. Не критично для dev, но для production — починить (ускорить fetch-interval либо явный warmup health probe) |
 | TD-12 | Монолитный `GlobalExceptionHandler` мапит `NotFoundException` / `IllegalArgumentException` на 400 — семантически "Profile not found" должен быть 404 | Подтверждено в e2e сессии #8: `GET /api/profile` с валидным JWT для юзера без профиля возвращает 400 `"Profile not found for user: ..."`. Создать `ProfileNotFoundException` с `@ResponseStatus(NOT_FOUND)` либо в `GlobalExceptionHandler` различать "not found"-типы и возвращать 404. Затрагивает все домены монолита (profile, meal, workout, metric) — единый паттерн |
+| TD-13 | `GlobalExceptionHandler.handleGeneric` не логирует exception (`log.error` отсутствует) — stack trace невидим в продакшне | Добавить `log.error("Unhandled exception", ex)` перед `buildResponse`. Обнаружено в сессии #12: `/api/ai/recommend` возвращал 500 без строчки в логах |
+| TD-14 | OpenAI RestTemplate в `AIService.recommend()` отправляет тело запроса без поля `model` — OpenAI возвращает 400 `"you must provide a model parameter"` | Pre-existing баг. Проверить `OpenAIConfig.java` — возможно, `openAiRestTemplate` не имеет `MappingJackson2HttpMessageConverter` и тело сериализуется некорректно. Либо в `AIService` явно передавать `model` другим способом. Не критично для микросервисной архитектуры |

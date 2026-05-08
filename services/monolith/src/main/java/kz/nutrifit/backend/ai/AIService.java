@@ -2,13 +2,13 @@ package kz.nutrifit.backend.ai;
 
 import kz.nutrifit.backend.ai.dto.AIRequest;
 import kz.nutrifit.backend.ai.dto.AIResponse;
+import kz.nutrifit.backend.client.MealItemSummary;
+import kz.nutrifit.backend.client.MealSummary;
+import kz.nutrifit.backend.client.NutritionServiceClient;
 import kz.nutrifit.backend.client.ProfileSummary;
 import kz.nutrifit.backend.client.UserServiceClient;
 import kz.nutrifit.backend.metrics.HealthMetric;
 import kz.nutrifit.backend.metrics.MetricsRepository;
-import kz.nutrifit.backend.nutrition.Meal;
-import kz.nutrifit.backend.nutrition.MealItem;
-import kz.nutrifit.backend.nutrition.repository.MealRepository;
 import kz.nutrifit.backend.user.User;
 import kz.nutrifit.backend.workout.Workout;
 import kz.nutrifit.backend.workout.WorkoutRepository;
@@ -25,18 +25,18 @@ public class AIService {
 
     private final RestTemplate restTemplate;
     private final UserServiceClient userServiceClient;
-    private final MealRepository mealRepository;
+    private final NutritionServiceClient nutritionServiceClient;
     private final WorkoutRepository workoutRepository;
     private final MetricsRepository metricsRepository;
 
     public AIService(RestTemplate openAiRestTemplate,
                      UserServiceClient userServiceClient,
-                     MealRepository mealRepository,
+                     NutritionServiceClient nutritionServiceClient,
                      WorkoutRepository workoutRepository,
                      MetricsRepository metricsRepository) {
         this.restTemplate = openAiRestTemplate;
         this.userServiceClient = userServiceClient;
-        this.mealRepository = mealRepository;
+        this.nutritionServiceClient = nutritionServiceClient;
         this.workoutRepository = workoutRepository;
         this.metricsRepository = metricsRepository;
     }
@@ -56,7 +56,7 @@ public class AIService {
                     .append(".\n");
         }
 
-        List<Meal> meals = mealRepository.findAllByUser(user);
+        List<MealSummary> meals = nutritionServiceClient.getMeals(user.getId());
         if (!meals.isEmpty()) {
             String mealSummary = meals.stream().map(this::formatMeal).collect(Collectors.joining(" | "));
             builder.append("Recent meals: ").append(mealSummary).append("\n");
@@ -113,15 +113,15 @@ public class AIService {
         return "AI recommendation unavailable at the moment.";
     }
 
-    private String formatMeal(Meal meal) {
-        String items = meal.getItems().stream()
-                .map(this::formatMealItem)
-                .collect(Collectors.joining(", "));
+    private String formatMeal(MealSummary meal) {
+        String items = meal.getItems() != null
+                ? meal.getItems().stream().map(this::formatMealItem).collect(Collectors.joining(", "))
+                : "";
         return String.format("%s on %s (%.1f kcal): %s",
                 meal.getName(), meal.getMealDate(), meal.getTotalCalories(), items);
     }
 
-    private String formatMealItem(MealItem item) {
+    private String formatMealItem(MealItemSummary item) {
         double qty = item.getQuantity() != null ? item.getQuantity() : 0.0;
         double kcal = item.getCaloriesPer100g() != null ? item.getCaloriesPer100g() * qty / 100.0 : 0.0;
         return String.format("%s %.1fg (%.1f kcal)", item.getName(), qty, kcal);
