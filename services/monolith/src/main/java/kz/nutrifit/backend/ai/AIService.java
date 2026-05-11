@@ -12,6 +12,12 @@ import kz.nutrifit.backend.metrics.MetricsRepository;
 import kz.nutrifit.backend.user.User;
 import kz.nutrifit.backend.workout.Workout;
 import kz.nutrifit.backend.workout.WorkoutRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -22,6 +28,20 @@ import java.util.stream.Collectors;
 
 @Service
 public class AIService {
+
+    private static final Logger log = LoggerFactory.getLogger(AIService.class);
+    private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+    private static final String SYSTEM_PROMPT =
+            "You are a digital fitness and nutrition coach. Provide concise personalized recommendations.";
+
+    @Value("${openai.model:gpt-4o-mini}")
+    private String model;
+
+    @Value("${openai.max-tokens:500}")
+    private int maxTokens;
+
+    @Value("${openai.temperature:0.7}")
+    private double temperature;
 
     private final RestTemplate restTemplate;
     private final UserServiceClient userServiceClient;
@@ -43,7 +63,6 @@ public class AIService {
 
     public String buildContext(User user, String userPrompt) {
         StringBuilder builder = new StringBuilder();
-        builder.append("You are a digital fitness and nutrition coach. Provide concise personalized recommendations.\n");
 
         ProfileSummary profile = userServiceClient.getProfile(user.getId());
         if (profile != null) {
@@ -88,14 +107,27 @@ public class AIService {
     }
 
     public AIResponse recommend(AIRequest request) {
-        Map<String, Object> body = Map.of(
-                "model", "gpt-3.5-turbo",
-                "messages", List.of(Map.of("role", "user", "content", request.getPrompt())),
-                "temperature", 0.7
-        );
-        ResponseEntity<Map> response = restTemplate.postForEntity("https://api.openai.com/v1/chat/completions", body, Map.class);
-        String recommendation = extractRecommendation(response.getBody());
-        return new AIResponse(recommendation);
+        try {
+            Map<String, Object> body = Map.of(
+                    "model", model,
+                    "messages", List.of(
+                            Map.of("role", "system", "content", SYSTEM_PROMPT),
+                            Map.of("role", "user", "content", request.getPrompt())
+                    ),
+                    "temperature", temperature,
+                    "max_tokens", maxTokens
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(OPENAI_URL, entity, Map.class);
+            return new AIResponse(extractRecommendation(response.getBody()));
+        } catch (Exception ex) {
+            log.error("OpenAI call failed", ex);
+            return new AIResponse("AI recommendation unavailable at the moment.");
+        }
     }
 
     @SuppressWarnings("unchecked")

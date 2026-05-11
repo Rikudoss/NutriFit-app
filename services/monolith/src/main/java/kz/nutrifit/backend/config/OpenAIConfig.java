@@ -18,8 +18,7 @@ public class OpenAIConfig {
     public RestTemplate openAiRestTemplate() {
         RestTemplate restTemplate = new RestTemplate();
         ClientHttpRequestInterceptor interceptor = (request, body, execution) -> {
-            request.getHeaders().add("Authorization", "Bearer " + apiKey);
-            request.getHeaders().add("Content-Type", "application/json");
+cle            request.getHeaders().setBearerAuth(apiKey);
             return execution.execute(request, body);
         };
         restTemplate.setInterceptors(List.of(interceptor));
