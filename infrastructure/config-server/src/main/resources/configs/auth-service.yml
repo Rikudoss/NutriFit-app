@@ -46,7 +46,7 @@ jwt:
 
 app:
   mail:
-    from: noreply@nutrifit.kz
+    from: ${MAILTRAP_USERNAME}
 
 management:
   endpoints:

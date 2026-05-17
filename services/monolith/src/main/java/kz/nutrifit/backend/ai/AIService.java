@@ -32,7 +32,12 @@ public class AIService {
     private static final Logger log = LoggerFactory.getLogger(AIService.class);
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
     private static final String SYSTEM_PROMPT =
-            "You are a digital fitness and nutrition coach. Provide concise personalized recommendations.";
+            "You are NutriFit AI — a smart fitness and nutrition assistant. " +
+            "Answer the user's question directly. If the question is about fitness, nutrition, or health — " +
+            "use the provided profile and meal data for personalized advice. " +
+            "If the question is general (math, weather, etc.) — answer it normally without fitness context. " +
+            "IMPORTANT: Always respond in the same language the user writes in. " +
+            "If user writes in Russian, respond in Russian. If in English, respond in English.";
 
     @Value("${openai.model:gpt-4o-mini}")
     private String model;
@@ -102,7 +107,7 @@ public class AIService {
         if (userPrompt != null && !userPrompt.isBlank()) {
             builder.append("User request: ").append(userPrompt).append("\n");
         }
-        builder.append("Return actionable daily nutrition and workout guidance tailored to the data.");
+        builder.append("Answer the user's question using this context if relevant.");
         return builder.toString();
     }
 
