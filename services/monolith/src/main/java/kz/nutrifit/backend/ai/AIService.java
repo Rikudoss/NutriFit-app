@@ -142,7 +142,7 @@ public class AIService {
         }
         List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
         if (choices != null && !choices.isEmpty()) {
-            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            Map<String, Object> message = (Map<String, Object>) choices.getFirst().get("message");
             if (message != null && message.get("content") != null) {
                 return message.get("content").toString();
             }
